@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using MediaTekDocuments.model;
 using MediaTekDocuments.manager;
@@ -37,6 +37,12 @@ namespace MediaTekDocuments.dal
         private const string POST = "POST";
         /// <summary>
         /// méthode HTTP pour update
+        /// </summary>
+        private const string PUT = "PUT";
+        /// <summary>
+        /// méthode HTTP pour delete
+        /// </summary>
+        private const string DELETE = "DELETE";
 
         /// <summary>
         /// Méthode privée pour créer un singleton
@@ -141,6 +147,316 @@ namespace MediaTekDocuments.dal
             String jsonIdDocument = convertToJson("id", idDocument);
             List<Exemplaire> lesExemplaires = TraitementRecup<Exemplaire>(GET, "exemplaire/" + jsonIdDocument, null);
             return lesExemplaires;
+        }
+
+        /// <summary>
+        /// Écriture d'une revue en base de données
+        /// </summary>
+        /// <param name="revue">Revue à insérer</param>
+        /// <returns>true si l'insertion a pu se faire</returns>
+        public bool CreerRevue(Revue revue)
+        {
+            String jsonRevue = RevueToChampsJson(revue);
+            try
+            {
+                String parametres = "champs=" + Uri.EscapeDataString(jsonRevue);
+                return TraitementEcrire(POST, "revue", parametres);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Modification d'une revue en base de données
+        /// </summary>
+        /// <param name="revue">Revue à modifier</param>
+        /// <returns>true si la modification a pu se faire</returns>
+        public bool ModifierRevue(Revue revue)
+        {
+            String jsonRevue = RevueToChampsJson(revue);
+            try
+            {
+                String parametres = "champs=" + Uri.EscapeDataString(jsonRevue);
+                return TraitementEcrire(PUT, "revue/" + Uri.EscapeDataString(revue.Id), parametres);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Sérialise une Revue en JSON avec les noms de champs attendus par l'API PHP
+        /// </summary>
+        private String RevueToChampsJson(Revue revue)
+        {
+            var obj = new
+            {
+                id = revue.Id,
+                titre = revue.Titre,
+                image = revue.Image,
+                idRayon = revue.IdRayon,
+                idPublic = revue.IdPublic,
+                idGenre = revue.IdGenre,
+                periodicite = revue.Periodicite,
+                delaiMiseADispo = revue.DelaiMiseADispo
+            };
+            return JsonConvert.SerializeObject(obj);
+        }
+
+        /// <summary>
+        /// Écriture d'un DVD en base de données
+        /// </summary>
+        /// <param name="dvd">DVD à insérer</param>
+        /// <returns>true si l'insertion a pu se faire</returns>
+        public bool CreerDvd(Dvd dvd)
+        {
+            String jsonDvd = DvdToChampsJson(dvd);
+            try
+            {
+                String parametres = "champs=" + Uri.EscapeDataString(jsonDvd);
+                return TraitementEcrire(POST, "dvd", parametres);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Modification d'un DVD en base de données
+        /// </summary>
+        /// <param name="dvd">DVD à modifier</param>
+        /// <returns>true si la modification a pu se faire</returns>
+        public bool ModifierDvd(Dvd dvd)
+        {
+            String jsonDvd = DvdToChampsJson(dvd);
+            try
+            {
+                String parametres = "champs=" + Uri.EscapeDataString(jsonDvd);
+                return TraitementEcrire(PUT, "dvd/" + Uri.EscapeDataString(dvd.Id), parametres);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Sérialise un Dvd en JSON avec les noms de champs attendus par l'API PHP
+        /// </summary>
+        private String DvdToChampsJson(Dvd dvd)
+        {
+            var obj = new
+            {
+                id = dvd.Id,
+                titre = dvd.Titre,
+                image = dvd.Image,
+                idRayon = dvd.IdRayon,
+                idPublic = dvd.IdPublic,
+                idGenre = dvd.IdGenre,
+                duree = dvd.Duree,
+                realisateur = dvd.Realisateur,
+                synopsis = dvd.Synopsis
+            };
+            return JsonConvert.SerializeObject(obj);
+        }
+
+        /// <summary>
+        /// Écriture d'un livre en base de données
+        /// </summary>
+        /// <param name="livre">Livre à insérer</param>
+        /// <returns>true si l'insertion a pu se faire</returns>
+        public bool CreerLivre(Livre livre)
+        {
+            String jsonLivre = LivreToChampsJson(livre);
+            try
+            {
+                String parametres = "champs=" + Uri.EscapeDataString(jsonLivre);
+                return TraitementEcrire(POST, "livre", parametres);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Modification d'un livre en base de données
+        /// </summary>
+        /// <param name="livre">Livre à modifier</param>
+        /// <returns>true si la modification a pu se faire (code==200 et result>0)</returns>
+        public bool ModifierLivre(Livre livre)
+        {
+            String jsonLivre = LivreToChampsJson(livre);
+            try
+            {
+                String parametres = "champs=" + Uri.EscapeDataString(jsonLivre);
+                return TraitementEcrire(PUT, "livre/" + Uri.EscapeDataString(livre.Id), parametres);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Résultat d'une tentative de suppression (pour messages utilisateur différenciés)
+        /// </summary>
+        public enum ResultatSuppression
+        {
+            Erreur = -1,
+            RefuseCommande = 0,
+            Succes = 1
+        }
+
+        /// <summary>
+        /// Supprime une revue en base de données
+        /// </summary>
+        /// <param name="id">Id de la revue à supprimer</param>
+        /// <returns>ResultatSuppression : Succes, RefuseCommande (règle métier), ou Erreur</returns>
+        public ResultatSuppression SupprimerRevue(string id)
+        {
+            try
+            {
+                String jsonChamps = convertToJson("id", id);
+                String message = "revue/" + Uri.EscapeDataString(jsonChamps);
+                return TraitementSupprimer(DELETE, message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return ResultatSuppression.Erreur;
+            }
+        }
+
+        /// <summary>
+        /// Supprime un DVD en base de données
+        /// </summary>
+        /// <param name="id">Id du DVD à supprimer</param>
+        /// <returns>ResultatSuppression : Succes, RefuseCommande (règle métier), ou Erreur</returns>
+        public ResultatSuppression SupprimerDvd(string id)
+        {
+            try
+            {
+                String jsonChamps = convertToJson("id", id);
+                String message = "dvd/" + Uri.EscapeDataString(jsonChamps);
+                return TraitementSupprimer(DELETE, message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return ResultatSuppression.Erreur;
+            }
+        }
+
+        /// <summary>
+        /// Supprime un livre en base de données
+        /// </summary>
+        /// <param name="id">Id du livre à supprimer</param>
+        /// <returns>ResultatSuppression : Succes, RefuseCommande (règle métier), ou Erreur</returns>
+        public ResultatSuppression SupprimerLivre(string id)
+        {
+            try
+            {
+                String jsonChamps = convertToJson("id", id);
+                String message = "livre/" + Uri.EscapeDataString(jsonChamps);
+                return TraitementSupprimer(DELETE, message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return ResultatSuppression.Erreur;
+            }
+        }
+
+        /// <summary>
+        /// Traitement du DELETE - retourne le statut pour différencier succès, refus métier et erreur
+        /// code=200 et result>0 => Succes ; code=200 et result=0 => RefuseCommande ; sinon => Erreur
+        /// </summary>
+        private ResultatSuppression TraitementSupprimer(String methode, String message)
+        {
+            try
+            {
+                JObject retour = api.RecupDistant(methode, message, null);
+                var codeToken = retour["code"];
+                if (codeToken == null) return ResultatSuppression.Erreur;
+                int codeValue;
+                if (!int.TryParse(codeToken.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out codeValue) || codeValue != 200)
+                {
+                    Console.WriteLine("code erreur = " + codeToken?.ToString() + " message = " + retour["message"]?.ToString());
+                    return ResultatSuppression.Erreur;
+                }
+                var resultToken = retour["result"];
+                if (resultToken == null) return ResultatSuppression.Erreur;
+                double resultValue;
+                if (!double.TryParse(resultToken.ToString(), System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out resultValue))
+                    return ResultatSuppression.Erreur;
+                return resultValue > 0 ? ResultatSuppression.Succes : ResultatSuppression.RefuseCommande;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Erreur lors de l'accès à l'API : " + e.Message);
+                return ResultatSuppression.Erreur;
+            }
+        }
+
+        /// <summary>
+        /// Sérialise un Livre en JSON avec les noms de champs attendus par l'API PHP
+        /// </summary>
+        private String LivreToChampsJson(Livre livre)
+        {
+            var obj = new
+            {
+                id = livre.Id,
+                titre = livre.Titre,
+                image = livre.Image,
+                idRayon = livre.IdRayon,
+                idPublic = livre.IdPublic,
+                idGenre = livre.IdGenre,
+                ISBN = livre.Isbn,
+                auteur = livre.Auteur,
+                collection = livre.Collection
+            };
+            return JsonConvert.SerializeObject(obj, new CustomDateTimeConverter());
+        }
+
+        /// <summary>
+        /// Traitement de l'écriture (POST/PUT) - succès si code==200 et result>0 (guide CNED règle 9)
+        /// </summary>
+        private bool TraitementEcrire(String methode, String message, String parametres)
+        {
+            try
+            {
+                JObject retour = api.RecupDistant(methode, message, parametres);
+                var codeToken = retour["code"];
+                if (codeToken == null) return false;
+                int codeValue;
+                if (!int.TryParse(codeToken.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out codeValue) || codeValue != 200)
+                {
+                    Console.WriteLine("code erreur = " + codeToken?.ToString() + " message = " + retour["message"]?.ToString());
+                    return false;
+                }
+                var resultToken = retour["result"];
+                if (resultToken == null) return false;
+                double resultValue;
+                if (!double.TryParse(resultToken.ToString(), System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out resultValue))
+                    return false;
+                return resultValue > 0;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Erreur lors de l'accès à l'API : " + e.Message);
+                return false;
+            }
         }
 
         /// <summary>

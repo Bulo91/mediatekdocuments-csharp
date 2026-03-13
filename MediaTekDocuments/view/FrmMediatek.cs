@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 using MediaTekDocuments.model;
 using MediaTekDocuments.controller;
+using MediaTekDocuments.dal;
 using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
@@ -28,7 +29,10 @@ namespace MediaTekDocuments.view
         {
             InitializeComponent();
             this.controller = new FrmMediatekController();
-        }
+
+			btnModifierLivre.Enabled = false;
+			btnSupprimerLivre.Enabled = false;
+		}
 
         /// <summary>
         /// Rempli un des 3 combo (genre, public, rayon)
@@ -246,38 +250,45 @@ namespace MediaTekDocuments.view
             }
         }
 
-        /// <summary>
-        /// Sur la sélection d'une ligne ou cellule dans le grid
-        /// affichage des informations du livre
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void DgvLivresListe_SelectionChanged(object sender, EventArgs e)
-        {
-            if (dgvLivresListe.CurrentCell != null)
-            {
-                try
-                {
-                    Livre livre = (Livre)bdgLivresListe.List[bdgLivresListe.Position];
-                    AfficheLivresInfos(livre);
-                }
-                catch
-                {
-                    VideLivresZones();
-                }
-            }
-            else
-            {
-                VideLivresInfos();
-            }
-        }
+		/// <summary>
+		/// Sur la sélection d'une ligne ou cellule dans le grid
+		/// affichage des informations du livre
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
+		private void DgvLivresListe_SelectionChanged(object sender, EventArgs e)
+		{
+			if (dgvLivresListe.CurrentCell != null)
+			{
+				btnModifierLivre.Enabled = true;
+				btnSupprimerLivre.Enabled = true;
 
-        /// <summary>
-        /// Sur le clic du bouton d'annulation, affichage de la liste complète des livres
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void BtnLivresAnnulPublics_Click(object sender, EventArgs e)
+				try
+				{
+					Livre livre = (Livre)bdgLivresListe.List[bdgLivresListe.Position];
+					AfficheLivresInfos(livre);
+				}
+				catch
+				{
+					VideLivresZones();
+					btnModifierLivre.Enabled = false;
+					btnSupprimerLivre.Enabled = false;
+				}
+			}
+			else
+			{
+				VideLivresInfos();
+				btnModifierLivre.Enabled = false;
+				btnSupprimerLivre.Enabled = false;
+			}
+		}
+
+		/// <summary>
+		/// Sur le clic du bouton d'annulation, affichage de la liste complète des livres
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
+		private void BtnLivresAnnulPublics_Click(object sender, EventArgs e)
         {
             RemplirLivresListeComplete();
         }
@@ -571,6 +582,8 @@ namespace MediaTekDocuments.view
         {
             if (dgvDvdListe.CurrentCell != null)
             {
+                btnModifierDvd.Enabled = true;
+                btnSupprimerDvd.Enabled = true;
                 try
                 {
                     Dvd dvd = (Dvd)bdgDvdListe.List[bdgDvdListe.Position];
@@ -578,12 +591,16 @@ namespace MediaTekDocuments.view
                 }
                 catch
                 {
-                    VideDvdZones();
+                    VideDvdInfos();
+                    btnModifierDvd.Enabled = false;
+                    btnSupprimerDvd.Enabled = false;
                 }
             }
             else
             {
                 VideDvdInfos();
+                btnModifierDvd.Enabled = false;
+                btnSupprimerDvd.Enabled = false;
             }
         }
 
@@ -674,6 +691,167 @@ namespace MediaTekDocuments.view
                     break;
             }
             RemplirDvdListe(sortedList);
+        }
+
+        /// <summary>
+        /// Modification du DVD sélectionné : ouvre le formulaire prérempli puis PUT vers l'API
+        /// </summary>
+        private void btnModifierDvd_Click(object sender, EventArgs e)
+        {
+            if (bdgDvdListe.Current == null)
+            {
+                MessageBox.Show("Veuillez sélectionner un DVD à modifier.");
+                return;
+            }
+
+            Dvd dvdSelectionne = (Dvd)bdgDvdListe.Current;
+
+            FrmAjoutDvd frm = new FrmAjoutDvd(
+                controller.GetAllGenres(),
+                controller.GetAllPublics(),
+                controller.GetAllRayons(),
+                dvdSelectionne
+            );
+
+            if (frm.ShowDialog() == DialogResult.OK)
+            {
+                Categorie genre = frm.GenreSelectionne;
+                Categorie lePublic = frm.PublicSelectionne;
+                Categorie rayon = frm.RayonSelectionne;
+
+                Dvd dvdModifie = new Dvd(
+                    dvdSelectionne.Id,
+                    frm.TitreDvd,
+                    dvdSelectionne.Image ?? "",
+                    frm.DureeDvd,
+                    frm.RealisateurDvd,
+                    frm.SynopsisDvd,
+                    genre.Id,
+                    genre.Libelle,
+                    lePublic.Id,
+                    lePublic.Libelle,
+                    rayon.Id,
+                    rayon.Libelle
+                );
+
+                bool ok = controller.ModifierDvd(dvdModifie);
+
+                if (ok)
+                {
+                    MessageBox.Show("DVD modifié avec succès.");
+                    lesDvd = new List<Dvd>(controller.GetAllDvd());
+                    VideDvdZones();
+                    RemplirDvdListe(lesDvd);
+                    dgvDvdListe.Refresh();
+                }
+                else
+                {
+                    MessageBox.Show("Erreur lors de la modification du DVD.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Suppression du DVD sélectionné : confirmation puis DELETE vers l'API
+        /// </summary>
+        private void btnSupprimerDvd_Click(object sender, EventArgs e)
+        {
+            if (bdgDvdListe.Current == null)
+            {
+                MessageBox.Show("Veuillez sélectionner un DVD à supprimer.");
+                return;
+            }
+
+            Dvd dvdSelectionne = (Dvd)bdgDvdListe.Current;
+
+            DialogResult confirmation = MessageBox.Show(
+                "Êtes-vous sûr de vouloir supprimer le DVD \"" + dvdSelectionne.Titre + "\" ?",
+                "Confirmer la suppression",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+            );
+
+            if (confirmation != DialogResult.Yes)
+                return;
+
+            Access.ResultatSuppression resultat = controller.SupprimerDvd(dvdSelectionne.Id);
+
+            switch (resultat)
+            {
+                case Access.ResultatSuppression.Succes:
+                    MessageBox.Show("DVD supprimé avec succès.");
+                    lesDvd = new List<Dvd>(controller.GetAllDvd());
+                    VideDvdZones();
+                    RemplirDvdListe(lesDvd);
+                    dgvDvdListe.Refresh();
+                    break;
+                case Access.ResultatSuppression.RefuseCommande:
+                    MessageBox.Show(
+                        "Ce DVD ne peut pas être supprimé car il possède des commandes rattachées.",
+                        "Suppression refusée",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    break;
+                case Access.ResultatSuppression.Erreur:
+                default:
+                    MessageBox.Show(
+                        "Erreur technique lors de la suppression du DVD.",
+                        "Erreur",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Ajout d'un DVD : ouvre le formulaire de saisie puis POST vers l'API
+        /// </summary>
+        private void btnAjouterDvd_Click(object sender, EventArgs e)
+        {
+            FrmAjoutDvd frm = new FrmAjoutDvd(
+                controller.GetAllGenres(),
+                controller.GetAllPublics(),
+                controller.GetAllRayons()
+            );
+
+            if (frm.ShowDialog() == DialogResult.OK)
+            {
+                Categorie genre = frm.GenreSelectionne;
+                Categorie lePublic = frm.PublicSelectionne;
+                Categorie rayon = frm.RayonSelectionne;
+
+                Dvd dvd = new Dvd(
+                    frm.IdDvd,
+                    frm.TitreDvd,
+                    "",
+                    frm.DureeDvd,
+                    frm.RealisateurDvd,
+                    frm.SynopsisDvd,
+                    genre.Id,
+                    genre.Libelle,
+                    lePublic.Id,
+                    lePublic.Libelle,
+                    rayon.Id,
+                    rayon.Libelle
+                );
+
+                bool ok = controller.CreerDvd(dvd);
+
+                if (ok)
+                {
+                    MessageBox.Show("DVD ajouté avec succès.");
+                    lesDvd = new List<Dvd>(controller.GetAllDvd());
+                    VideDvdZones();
+                    RemplirDvdListe(lesDvd);
+                    dgvDvdListe.Refresh();
+                }
+                else
+                {
+                    MessageBox.Show("Erreur lors de l'ajout du DVD.");
+                }
+            }
         }
         #endregion
 
@@ -883,6 +1061,8 @@ namespace MediaTekDocuments.view
         {
             if (dgvRevuesListe.CurrentCell != null)
             {
+                btnModifierRevue.Enabled = true;
+                btnSupprimerRevue.Enabled = true;
                 try
                 {
                     Revue revue = (Revue)bdgRevuesListe.List[bdgRevuesListe.Position];
@@ -891,11 +1071,15 @@ namespace MediaTekDocuments.view
                 catch
                 {
                     VideRevuesZones();
+                    btnModifierRevue.Enabled = false;
+                    btnSupprimerRevue.Enabled = false;
                 }
             }
             else
             {
                 VideRevuesInfos();
+                btnModifierRevue.Enabled = false;
+                btnSupprimerRevue.Enabled = false;
             }
         }
 
@@ -986,6 +1170,165 @@ namespace MediaTekDocuments.view
                     break;
             }
             RemplirRevuesListe(sortedList);
+        }
+
+        /// <summary>
+        /// Suppression de la revue sélectionnée : confirmation puis DELETE vers l'API
+        /// </summary>
+        private void btnSupprimerRevue_Click(object sender, EventArgs e)
+        {
+            if (bdgRevuesListe.Current == null)
+            {
+                MessageBox.Show("Veuillez sélectionner une revue à supprimer.");
+                return;
+            }
+
+            Revue revueSelectionnee = (Revue)bdgRevuesListe.Current;
+
+            DialogResult confirmation = MessageBox.Show(
+                "Êtes-vous sûr de vouloir supprimer la revue \"" + revueSelectionnee.Titre + "\" ?",
+                "Confirmer la suppression",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+            );
+
+            if (confirmation != DialogResult.Yes)
+                return;
+
+            Access.ResultatSuppression resultat = controller.SupprimerRevue(revueSelectionnee.Id);
+
+            switch (resultat)
+            {
+                case Access.ResultatSuppression.Succes:
+                    MessageBox.Show("Revue supprimée avec succès.");
+                    lesRevues = new List<Revue>(controller.GetAllRevues());
+                    VideRevuesZones();
+                    RemplirRevuesListe(lesRevues);
+                    dgvRevuesListe.Refresh();
+                    break;
+                case Access.ResultatSuppression.RefuseCommande:
+                    MessageBox.Show(
+                        "Cette revue ne peut pas être supprimée car elle possède des exemplaires.",
+                        "Suppression refusée",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    break;
+                case Access.ResultatSuppression.Erreur:
+                default:
+                    MessageBox.Show(
+                        "Erreur technique lors de la suppression de la revue.",
+                        "Erreur",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Modification de la revue sélectionnée : ouvre le formulaire prérempli puis PUT vers l'API
+        /// </summary>
+        private void btnModifierRevue_Click(object sender, EventArgs e)
+        {
+            if (bdgRevuesListe.Current == null)
+            {
+                MessageBox.Show("Veuillez sélectionner une revue à modifier.");
+                return;
+            }
+
+            Revue revueSelectionnee = (Revue)bdgRevuesListe.Current;
+
+            FrmAjoutRevue frm = new FrmAjoutRevue(
+                controller.GetAllGenres(),
+                controller.GetAllPublics(),
+                controller.GetAllRayons(),
+                revueSelectionnee
+            );
+
+            if (frm.ShowDialog() == DialogResult.OK)
+            {
+                Categorie genre = frm.GenreSelectionne;
+                Categorie lePublic = frm.PublicSelectionne;
+                Categorie rayon = frm.RayonSelectionne;
+
+                Revue revueModifiee = new Revue(
+                    revueSelectionnee.Id,
+                    frm.TitreRevue,
+                    revueSelectionnee.Image ?? "",
+                    genre.Id,
+                    genre.Libelle,
+                    lePublic.Id,
+                    lePublic.Libelle,
+                    rayon.Id,
+                    rayon.Libelle,
+                    frm.PeriodiciteRevue,
+                    frm.DelaiMiseADispoRevue
+                );
+
+                bool ok = controller.ModifierRevue(revueModifiee);
+
+                if (ok)
+                {
+                    MessageBox.Show("Revue modifiée avec succès.");
+                    lesRevues = new List<Revue>(controller.GetAllRevues());
+                    VideRevuesZones();
+                    RemplirRevuesListe(lesRevues);
+                    dgvRevuesListe.Refresh();
+                }
+                else
+                {
+                    MessageBox.Show("Erreur lors de la modification de la revue.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Ajout d'une revue : ouvre le formulaire de saisie puis POST vers l'API
+        /// </summary>
+        private void btnAjouterRevue_Click(object sender, EventArgs e)
+        {
+            FrmAjoutRevue frm = new FrmAjoutRevue(
+                controller.GetAllGenres(),
+                controller.GetAllPublics(),
+                controller.GetAllRayons()
+            );
+
+            if (frm.ShowDialog() == DialogResult.OK)
+            {
+                Categorie genre = frm.GenreSelectionne;
+                Categorie lePublic = frm.PublicSelectionne;
+                Categorie rayon = frm.RayonSelectionne;
+
+                Revue revue = new Revue(
+                    frm.IdRevue,
+                    frm.TitreRevue,
+                    "",
+                    genre.Id,
+                    genre.Libelle,
+                    lePublic.Id,
+                    lePublic.Libelle,
+                    rayon.Id,
+                    rayon.Libelle,
+                    frm.PeriodiciteRevue,
+                    frm.DelaiMiseADispoRevue
+                );
+
+                bool ok = controller.CreerRevue(revue);
+
+                if (ok)
+                {
+                    MessageBox.Show("Revue ajoutée avec succès.");
+                    lesRevues = new List<Revue>(controller.GetAllRevues());
+                    VideRevuesZones();
+                    RemplirRevuesListe(lesRevues);
+                    dgvRevuesListe.Refresh();
+                }
+                else
+                {
+                    MessageBox.Show("Erreur lors de l'ajout de la revue.");
+                }
+            }
         }
         #endregion
 
@@ -1238,6 +1581,180 @@ namespace MediaTekDocuments.view
                 pcbReceptionExemplaireRevueImage.Image = null;
             }
         }
-        #endregion
-    }
+		#endregion
+
+		/// <summary>
+		/// Ajout d'un livre : ouvre le formulaire de saisie puis POST vers l'API (guide CNED + format API PHP)
+
+		/// <summary>
+		/// Modification du livre sélectionné : ouvre le formulaire prérempli puis PUT vers l'API
+		/// </summary>
+
+		/// <summary>
+		/// Suppression du livre sélectionné : confirmation puis DELETE vers l'API (champs id)
+		/// </summary>
+	
+
+		private void dgvLivresListe_CellContentClick(object sender, DataGridViewCellEventArgs e)
+		{
+			// Sélection gérée par DgvLivresListe_SelectionChanged
+		}
+
+		private void btnAjouterLivre_Click(object sender, EventArgs e)
+		{
+			FrmAjoutLivre frm = new FrmAjoutLivre(
+				controller.GetAllGenres(),
+				controller.GetAllPublics(),
+				controller.GetAllRayons()
+			);
+
+			if (frm.ShowDialog() == DialogResult.OK)
+			{
+				Categorie genre = frm.GenreSelectionne;
+				Categorie lePublic = frm.PublicSelectionne;
+				Categorie rayon = frm.RayonSelectionne;
+
+				Livre livre = new Livre(
+					frm.IdLivre,
+					frm.TitreLivre,
+					"",
+					frm.IsbnLivre,
+					frm.AuteurLivre,
+					"",
+					genre.Id,
+					genre.Libelle,
+					lePublic.Id,
+					lePublic.Libelle,
+					rayon.Id,
+					rayon.Libelle
+				);
+
+				bool ok = controller.CreerLivre(livre);
+
+				if (ok)
+				{
+					MessageBox.Show("Livre ajouté avec succès.");
+					lesLivres = new List<Livre>(controller.GetAllLivres());
+					VideLivresZones();
+					RemplirLivresListe(lesLivres);
+					dgvLivresListe.Refresh();
+				}
+				else
+				{
+					MessageBox.Show("Erreur lors de l'ajout du livre.");
+				}
+			}
+		}
+		/// <summary>
+		/// Modification du livre sélectionné : ouvre le formulaire prérempli puis PUT vers l'API
+		/// </summary>
+		private void btnModifierLivre_Click(object sender, EventArgs e)
+		{
+			if (bdgLivresListe.Current == null)
+			{
+				MessageBox.Show("Veuillez sélectionner un livre à modifier.");
+				return;
+			}
+
+			Livre livreSelectionne = (Livre)bdgLivresListe.Current;
+
+			FrmAjoutLivre frm = new FrmAjoutLivre(
+				controller.GetAllGenres(),
+				controller.GetAllPublics(),
+				controller.GetAllRayons(),
+				livreSelectionne
+			);
+
+			if (frm.ShowDialog() == DialogResult.OK)
+			{
+				Categorie genre = frm.GenreSelectionne;
+				Categorie lePublic = frm.PublicSelectionne;
+				Categorie rayon = frm.RayonSelectionne;
+
+				Livre livreModifie = new Livre(
+					livreSelectionne.Id,
+					frm.TitreLivre,
+					livreSelectionne.Image ?? "",
+					frm.IsbnLivre,
+					frm.AuteurLivre,
+					livreSelectionne.Collection ?? "",
+					genre.Id,
+					genre.Libelle,
+					lePublic.Id,
+					lePublic.Libelle,
+					rayon.Id,
+					rayon.Libelle
+				);
+
+				bool ok = controller.ModifierLivre(livreModifie);
+
+				if (ok)
+				{
+					MessageBox.Show("Livre modifié avec succès.");
+					lesLivres = new List<Livre>(controller.GetAllLivres());
+					VideLivresZones();
+					RemplirLivresListe(lesLivres);
+					dgvLivresListe.Refresh();
+				}
+				else
+				{
+					MessageBox.Show("Erreur lors de la modification du livre.");
+				}
+			}
+		}
+
+		/// <summary>
+		/// Suppression du livre sélectionné : confirmation puis DELETE vers l'API
+		/// </summary>
+		private void btnSupprimerLivre_Click(object sender, EventArgs e)
+		{
+			if (bdgLivresListe.Current == null)
+			{
+				MessageBox.Show("Veuillez sélectionner un livre à supprimer.");
+				return;
+			}
+
+			Livre livreSelectionne = (Livre)bdgLivresListe.Current;
+
+			DialogResult confirmation = MessageBox.Show(
+				"Êtes-vous sûr de vouloir supprimer le livre \"" + livreSelectionne.Titre + "\" ?",
+				"Confirmer la suppression",
+				MessageBoxButtons.YesNo,
+				MessageBoxIcon.Question
+			);
+
+			if (confirmation != DialogResult.Yes)
+				return;
+
+			Access.ResultatSuppression resultat = controller.SupprimerLivre(livreSelectionne.Id);
+
+			switch (resultat)
+			{
+				case Access.ResultatSuppression.Succes:
+					MessageBox.Show("Livre supprimé avec succès.");
+					lesLivres = new List<Livre>(controller.GetAllLivres());
+					VideLivresZones();
+					RemplirLivresListe(lesLivres);
+					dgvLivresListe.Refresh();
+					break;
+				case Access.ResultatSuppression.RefuseCommande:
+					MessageBox.Show(
+						"Ce livre ne peut pas être supprimé car il possède des commandes rattachées.",
+						"Suppression refusée",
+						MessageBoxButtons.OK,
+						MessageBoxIcon.Warning
+					);
+					break;
+				case Access.ResultatSuppression.Erreur:
+				default:
+					MessageBox.Show(
+						"Erreur technique lors de la suppression du livre.",
+						"Erreur",
+						MessageBoxButtons.OK,
+						MessageBoxIcon.Error
+					);
+					break;
+			}
+		}
+	}
 }
