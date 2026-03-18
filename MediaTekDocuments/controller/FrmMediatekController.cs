@@ -88,6 +88,85 @@ namespace MediaTekDocuments.controller
         }
 
         /// <summary>
+        /// Récupère les commandes d'un document (livre ou DVD)
+        /// </summary>
+        /// <param name="idLivreDvd">id du livre ou DVD concerné</param>
+        /// <returns>Liste de CommandeDocument triée par date DESC</returns>
+        public List<CommandeDocument> GetCommandesDocument(string idLivreDvd)
+        {
+            return access.GetCommandesDocument(idLivreDvd);
+        }
+
+        /// <summary>
+        /// Crée une commande de document (livre ou DVD)
+        /// </summary>
+        /// <param name="commande">Commande à créer</param>
+        /// <returns>true si la création a pu se faire</returns>
+        public bool CreerCommandeDocument(CommandeDocument commande)
+        {
+            return access.CreerCommandeDocument(commande);
+        }
+
+        /// <summary>
+        /// Modifie le suivi d'une commande document
+        /// </summary>
+        /// <param name="idCommande">Id de la commande</param>
+        /// <param name="idSuivi">Nouveau suivi (00001, 00002, 00003, 00004)</param>
+        /// <returns>true si la modification a pu se faire</returns>
+        public bool ModifierSuiviCommandeDocument(string idCommande, string idSuivi)
+        {
+            return access.ModifierSuiviCommandeDocument(idCommande, idSuivi);
+        }
+
+        /// <summary>
+        /// Supprime une commande document (uniquement si suivi = en cours ou relancée).
+        /// </summary>
+        /// <param name="idCommande">Id de la commande à supprimer</param>
+        /// <returns>ResultatSuppression : Succes, RefuseCommande (livrée/réglée), ou Erreur</returns>
+        public Access.ResultatSuppression SupprimerCommandeDocument(string idCommande)
+        {
+            return access.SupprimerCommandeDocument(idCommande);
+        }
+
+        /// <summary>
+        /// Récupère les commandes / abonnements d'une revue
+        /// </summary>
+        /// <param name="idRevue">id de la revue concernée</param>
+        /// <returns>Liste d'AbonnementRevue</returns>
+        public List<AbonnementRevue> GetCommandesRevue(string idRevue)
+        {
+            return access.GetCommandesRevue(idRevue);
+        }
+
+        /// <summary>
+        /// Revues dont l'abonnement expire dans les 30 prochains jours.
+        /// </summary>
+        public List<AlerteAbonnementRevue> GetAbonnementsRevuesFinProche()
+        {
+            return access.GetAbonnementsRevuesFinProche();
+        }
+
+        /// <summary>
+        /// Crée une commande / abonnement de revue
+        /// </summary>
+        /// <param name="abonnement">Abonnement à créer</param>
+        /// <returns>true si la création a pu se faire</returns>
+        public bool CreerCommandeRevue(AbonnementRevue abonnement)
+        {
+            return access.CreerCommandeRevue(abonnement);
+        }
+
+        /// <summary>
+        /// Supprime une commande / abonnement de revue
+        /// </summary>
+        /// <param name="idCommande">Id de la commande à supprimer</param>
+        /// <returns>ResultatSuppression : Succes, RefuseCommande, ou Erreur</returns>
+        public Access.ResultatSuppression SupprimerCommandeRevue(string idCommande)
+        {
+            return access.SupprimerCommandeRevue(idCommande);
+        }
+
+        /// <summary>
         /// Crée un exemplaire d'une revue dans la bdd
         /// </summary>
         /// <param name="exemplaire">L'objet Exemplaire concerné</param>

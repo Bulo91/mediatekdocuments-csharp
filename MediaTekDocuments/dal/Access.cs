@@ -150,6 +150,176 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
+        /// Retourne les commandes d'un document (livre ou DVD)
+        /// </summary>
+        /// <param name="idLivreDvd">id du livre ou DVD concerné</param>
+        /// <returns>Liste d'objets CommandeDocument triée par date DESC</returns>
+        public List<CommandeDocument> GetCommandesDocument(string idLivreDvd)
+        {
+            String jsonIdLivreDvd = convertToJson("idLivreDvd", idLivreDvd);
+            List<CommandeDocument> lesCommandes = TraitementRecup<CommandeDocument>(GET, "commandesdocument/" + jsonIdLivreDvd, null);
+            return lesCommandes ?? new List<CommandeDocument>();
+        }
+
+        /// <summary>
+        /// Crée une commande de document (livre ou DVD) en base de données.
+        /// Insère dans commande et commandedocument avec suivi "en cours" (00001).
+        /// </summary>
+        /// <param name="commande">CommandeDocument à insérer (dateCommande, montant, nbExemplaire, idLivreDvd, idSuivi)</param>
+        /// <returns>true si l'insertion a pu se faire</returns>
+        public bool CreerCommandeDocument(CommandeDocument commande)
+        {
+            String jsonChamps = CommandeDocumentToChampsJson(commande);
+            try
+            {
+                String parametres = "champs=" + Uri.EscapeDataString(jsonChamps);
+                return TraitementEcrire(POST, "commandedocument", parametres);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Modifie le suivi d'une commande document (PUT - uniquement idSuivi).
+        /// </summary>
+        /// <param name="idCommande">Id de la commande</param>
+        /// <param name="idSuivi">Nouveau suivi (00001, 00002, 00003, 00004)</param>
+        /// <returns>true si la modification a pu se faire</returns>
+        public bool ModifierSuiviCommandeDocument(string idCommande, string idSuivi)
+        {
+            var obj = new { idSuivi = idSuivi };
+            String jsonChamps = JsonConvert.SerializeObject(obj);
+            try
+            {
+                String parametres = "champs=" + Uri.EscapeDataString(jsonChamps);
+                return TraitementEcrire(PUT, "commandedocument/" + Uri.EscapeDataString(idCommande), parametres);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Supprime une commande document (DELETE).
+        /// Règle métier côté API : refus si suivi = livrée (00003) ou réglée (00004).
+        /// </summary>
+        /// <param name="idCommande">Id de la commande à supprimer</param>
+        /// <returns>ResultatSuppression : Succes, RefuseCommande, ou Erreur</returns>
+        public ResultatSuppression SupprimerCommandeDocument(string idCommande)
+        {
+            try
+            {
+                String jsonChamps = convertToJson("id", idCommande);
+                String message = "commandedocument/" + Uri.EscapeDataString(jsonChamps);
+                return TraitementSupprimer(DELETE, message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return ResultatSuppression.Erreur;
+            }
+        }
+
+        /// <summary>
+        /// Retourne les commandes / abonnements d'une revue
+        /// </summary>
+        /// <param name="idRevue">id de la revue concernée</param>
+        /// <returns>Liste d'objets AbonnementRevue</returns>
+        public List<AbonnementRevue> GetCommandesRevue(string idRevue)
+        {
+            String jsonIdRevue = convertToJson("idRevue", idRevue);
+            List<AbonnementRevue> lesCommandes = TraitementRecup<AbonnementRevue>(GET, "commandesrevue/" + jsonIdRevue, null);
+            return lesCommandes ?? new List<AbonnementRevue>();
+        }
+
+        /// <summary>
+        /// Retourne les revues dont l'abonnement se termine dans les 30 prochains jours (titre + date de fin).
+        /// </summary>
+        /// <returns>Liste d'AlerteAbonnementRevue, ou liste vide si aucun résultat</returns>
+        public List<AlerteAbonnementRevue> GetAbonnementsRevuesFinProche()
+        {
+            List<AlerteAbonnementRevue> alertes = TraitementRecup<AlerteAbonnementRevue>(GET, "abonnementsrevuesfinproche", null);
+            return alertes ?? new List<AlerteAbonnementRevue>();
+        }
+
+        /// <summary>
+        /// Crée une commande / abonnement de revue en base de données.
+        /// </summary>
+        /// <param name="abonnement">AbonnementRevue à insérer</param>
+        /// <returns>true si l'insertion a pu se faire</returns>
+        public bool CreerCommandeRevue(AbonnementRevue abonnement)
+        {
+            String jsonChamps = AbonnementRevueToChampsJson(abonnement);
+            try
+            {
+                String parametres = "champs=" + Uri.EscapeDataString(jsonChamps);
+                return TraitementEcrire(POST, "commandesrevue", parametres);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Supprime une commande / abonnement de revue (DELETE).
+        /// Règles métier à appliquer côté API si besoin.
+        /// </summary>
+        /// <param name="idCommande">Id de la commande à supprimer</param>
+        /// <returns>ResultatSuppression : Succes, RefuseCommande, ou Erreur</returns>
+        public ResultatSuppression SupprimerCommandeRevue(string idCommande)
+        {
+            try
+            {
+                String jsonChamps = convertToJson("id", idCommande);
+                String message = "commandesrevue/" + Uri.EscapeDataString(jsonChamps);
+                return TraitementSupprimer(DELETE, message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return ResultatSuppression.Erreur;
+            }
+        }
+
+        /// <summary>
+        /// Sérialise une AbonnementRevue en JSON pour l'API PHP (insertion)
+        /// </summary>
+        private String AbonnementRevueToChampsJson(AbonnementRevue abonnement)
+        {
+            var obj = new
+            {
+                dateCommande = abonnement.DateCommande,
+                montant = abonnement.Montant,
+                dateFinAbonnement = abonnement.DateFinAbonnement,
+                idRevue = abonnement.IdRevue
+            };
+            return JsonConvert.SerializeObject(obj, new CustomDateTimeConverter());
+        }
+
+        /// <summary>
+        /// Sérialise une CommandeDocument en JSON pour l'API PHP (insertion)
+        /// </summary>
+        private String CommandeDocumentToChampsJson(CommandeDocument commande)
+        {
+            var obj = new
+            {
+                dateCommande = commande.DateCommande,
+                montant = commande.Montant,
+                nbExemplaire = commande.NbExemplaire,
+                idLivreDvd = commande.IdLivreDvd,
+                idSuivi = commande.IdSuivi
+            };
+            return JsonConvert.SerializeObject(obj, new CustomDateTimeConverter());
+        }
+
+        /// <summary>
         /// Écriture d'une revue en base de données
         /// </summary>
         /// <param name="revue">Revue à insérer</param>

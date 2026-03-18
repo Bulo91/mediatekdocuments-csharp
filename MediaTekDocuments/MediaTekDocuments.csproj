@@ -88,7 +88,16 @@
     <Compile Include="view\FrmMediatek.Designer.cs">
       <DependentUpon>FrmMediatek.cs</DependentUpon>
     </Compile>
+    <Compile Include="view\FrmAlertAbonnementsRevues.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="view\FrmAlertAbonnementsRevues.Designer.cs">
+      <DependentUpon>FrmAlertAbonnementsRevues.cs</DependentUpon>
+    </Compile>
+    <Compile Include="model\AbonnementRevue.cs" />
+    <Compile Include="model\AlerteAbonnementRevue.cs" />
     <Compile Include="model\Categorie.cs" />
+    <Compile Include="model\CommandeDocument.cs" />
     <Compile Include="model\Document.cs" />
     <Compile Include="model\Dvd.cs" />
     <Compile Include="model\Etat.cs" />
