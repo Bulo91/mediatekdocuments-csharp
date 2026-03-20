@@ -70,7 +70,10 @@ namespace MediaTekDocuments.view
 
         #region Onglet Livres
         private readonly BindingSource bdgLivresListe = new BindingSource();
+        private readonly BindingSource bdgLivresExemplairesListe = new BindingSource();
         private List<Livre> lesLivres = new List<Livre>();
+        private List<Exemplaire> lesLivresExemplaires = new List<Exemplaire>();
+        private List<Etat> lesEtatsLivres = new List<Etat>();
 
         /// <summary>
         /// Ouverture de l'onglet Livres : 
@@ -84,7 +87,12 @@ namespace MediaTekDocuments.view
             RemplirComboCategorie(controller.GetAllGenres(), bdgGenres, cbxLivresGenres);
             RemplirComboCategorie(controller.GetAllPublics(), bdgPublics, cbxLivresPublics);
             RemplirComboCategorie(controller.GetAllRayons(), bdgRayons, cbxLivresRayons);
+            lesEtatsLivres = controller.GetAllEtats();
+            cbxLivresExemplaireEtat.DataSource = lesEtatsLivres;
+            cbxLivresExemplaireEtat.SelectedIndex = -1;
             RemplirLivresListeComplete();
+            RemplirLivresExemplairesListe(null);
+            ActiverGestionEtatLivre(false);
         }
 
         /// <summary>
@@ -284,12 +292,15 @@ namespace MediaTekDocuments.view
 				{
 					Livre livre = (Livre)bdgLivresListe.List[bdgLivresListe.Position];
 					AfficheLivresInfos(livre);
+                    ChargerExemplairesLivreSelectionne(livre);
 				}
 				catch
 				{
 					VideLivresZones();
 					btnModifierLivre.Enabled = false;
 					btnSupprimerLivre.Enabled = false;
+                    RemplirLivresExemplairesListe(null);
+                    ActiverGestionEtatLivre(false);
 				}
 			}
 			else
@@ -297,6 +308,8 @@ namespace MediaTekDocuments.view
 				VideLivresInfos();
 				btnModifierLivre.Enabled = false;
 				btnSupprimerLivre.Enabled = false;
+                RemplirLivresExemplairesListe(null);
+                ActiverGestionEtatLivre(false);
 			}
 		}
 
@@ -388,11 +401,163 @@ namespace MediaTekDocuments.view
             }
             RemplirLivresListe(sortedList);
         }
+
+        /// <summary>
+        /// Charge les exemplaires du livre sélectionné.
+        /// </summary>
+        /// <param name="livre">Livre sélectionné</param>
+        private void ChargerExemplairesLivreSelectionne(Livre livre)
+        {
+            lesLivresExemplaires = controller.GetExemplairesDocument(livre.Id);
+            RemplirLivresExemplairesListe(lesLivresExemplaires.OrderByDescending(x => x.DateAchat).ToList());
+            ActiverGestionEtatLivre(false);
+        }
+
+        /// <summary>
+        /// Remplit la liste des exemplaires de livre.
+        /// </summary>
+        /// <param name="exemplaires">Liste d'exemplaires</param>
+        private void RemplirLivresExemplairesListe(List<Exemplaire> exemplaires)
+        {
+            if (exemplaires == null)
+            {
+                bdgLivresExemplairesListe.DataSource = null;
+                dgvLivresExemplairesListe.DataSource = bdgLivresExemplairesListe;
+                return;
+            }
+
+            bdgLivresExemplairesListe.DataSource = exemplaires;
+            dgvLivresExemplairesListe.DataSource = bdgLivresExemplairesListe;
+            dgvLivresExemplairesListe.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+
+            if (dgvLivresExemplairesListe.Columns["Id"] != null) dgvLivresExemplairesListe.Columns["Id"].Visible = false;
+            if (dgvLivresExemplairesListe.Columns["Photo"] != null) dgvLivresExemplairesListe.Columns["Photo"].Visible = false;
+            if (dgvLivresExemplairesListe.Columns["IdEtat"] != null) dgvLivresExemplairesListe.Columns["IdEtat"].Visible = false;
+
+            if (dgvLivresExemplairesListe.Columns["Numero"] != null) dgvLivresExemplairesListe.Columns["Numero"].DisplayIndex = 0;
+            if (dgvLivresExemplairesListe.Columns["DateAchat"] != null) dgvLivresExemplairesListe.Columns["DateAchat"].DisplayIndex = 1;
+            if (dgvLivresExemplairesListe.Columns["LibelleEtat"] != null) dgvLivresExemplairesListe.Columns["LibelleEtat"].DisplayIndex = 2;
+        }
+
+        /// <summary>
+        /// Active ou désactive la zone de changement d'état (livres).
+        /// </summary>
+        /// <param name="actif">true pour activer</param>
+        private void ActiverGestionEtatLivre(bool actif)
+        {
+            cbxLivresExemplaireEtat.Enabled = actif;
+            btnLivresExemplaireModifierEtat.Enabled = actif;
+            btnLivresExemplaireSupprimer.Enabled = actif;
+            if (!actif)
+            {
+                cbxLivresExemplaireEtat.SelectedIndex = -1;
+            }
+        }
+
+        private void dgvLivresExemplairesListe_SelectionChanged(object sender, EventArgs e)
+        {
+            if (dgvLivresExemplairesListe.CurrentCell == null || bdgLivresExemplairesListe.Position < 0)
+            {
+                ActiverGestionEtatLivre(false);
+                return;
+            }
+
+            Exemplaire exemplaire = (Exemplaire)bdgLivresExemplairesListe.List[bdgLivresExemplairesListe.Position];
+            Etat etat = lesEtatsLivres.Find(x => x.Id.Equals(exemplaire.IdEtat));
+            if (etat != null)
+            {
+                cbxLivresExemplaireEtat.SelectedItem = etat;
+            }
+            else
+            {
+                cbxLivresExemplaireEtat.SelectedIndex = -1;
+            }
+            ActiverGestionEtatLivre(true);
+        }
+
+        private void dgvLivresExemplairesListe_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (lesLivresExemplaires == null || lesLivresExemplaires.Count == 0) return;
+
+            string titreColonne = dgvLivresExemplairesListe.Columns[e.ColumnIndex].HeaderText;
+            List<Exemplaire> sortedList = new List<Exemplaire>(lesLivresExemplaires);
+            switch (titreColonne)
+            {
+                case "Numero":
+                    sortedList = sortedList.OrderByDescending(o => o.Numero).ToList();
+                    break;
+                case "DateAchat":
+                    sortedList = sortedList.OrderByDescending(o => o.DateAchat).ToList();
+                    break;
+                case "LibelleEtat":
+                    sortedList = sortedList.OrderBy(o => o.LibelleEtat).ToList();
+                    break;
+            }
+            RemplirLivresExemplairesListe(sortedList);
+        }
+
+        private void btnLivresExemplaireModifierEtat_Click(object sender, EventArgs e)
+        {
+            if (bdgLivresListe.Position < 0 || bdgLivresExemplairesListe.Position < 0 || cbxLivresExemplaireEtat.SelectedItem == null)
+            {
+                return;
+            }
+            Livre livre = (Livre)bdgLivresListe.List[bdgLivresListe.Position];
+            Exemplaire exemplaire = (Exemplaire)bdgLivresExemplairesListe.List[bdgLivresExemplairesListe.Position];
+            Etat etat = (Etat)cbxLivresExemplaireEtat.SelectedItem;
+
+            bool ok = controller.ModifierEtatExemplaire(livre.Id, exemplaire.Numero, etat.Id);
+            if (ok)
+            {
+                ChargerExemplairesLivreSelectionne(livre);
+            }
+            else
+            {
+                MessageBox.Show("Erreur lors de la modification de l'état.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnLivresExemplaireSupprimer_Click(object sender, EventArgs e)
+        {
+            if (bdgLivresListe.Position < 0 || bdgLivresExemplairesListe.Position < 0)
+            {
+                MessageBox.Show("Veuillez sélectionner un exemplaire à supprimer.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            Livre livre = (Livre)bdgLivresListe.List[bdgLivresListe.Position];
+            Exemplaire exemplaire = (Exemplaire)bdgLivresExemplairesListe.List[bdgLivresExemplairesListe.Position];
+
+            if (MessageBox.Show(
+                "Êtes-vous sûr de vouloir supprimer l'exemplaire n°" + exemplaire.Numero + " ?",
+                "Confirmation",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question) != DialogResult.Yes)
+            {
+                return;
+            }
+
+            Access.ResultatSuppression resultat = controller.SupprimerExemplaire(livre.Id, exemplaire.Numero);
+            switch (resultat)
+            {
+                case Access.ResultatSuppression.Succes:
+                    MessageBox.Show("Exemplaire supprimé avec succès.", "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    ChargerExemplairesLivreSelectionne(livre);
+                    break;
+                case Access.ResultatSuppression.RefuseCommande:
+                case Access.ResultatSuppression.Erreur:
+                default:
+                    MessageBox.Show("Erreur lors de la suppression de l'exemplaire.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    break;
+            }
+        }
         #endregion
 
         #region Onglet Dvd
         private readonly BindingSource bdgDvdListe = new BindingSource();
+        private readonly BindingSource bdgDvdExemplairesListe = new BindingSource();
         private List<Dvd> lesDvd = new List<Dvd>();
+        private List<Exemplaire> lesDvdExemplaires = new List<Exemplaire>();
+        private List<Etat> lesEtatsDvd = new List<Etat>();
 
         /// <summary>
         /// Ouverture de l'onglet Dvds : 
@@ -406,7 +571,12 @@ namespace MediaTekDocuments.view
             RemplirComboCategorie(controller.GetAllGenres(), bdgGenres, cbxDvdGenres);
             RemplirComboCategorie(controller.GetAllPublics(), bdgPublics, cbxDvdPublics);
             RemplirComboCategorie(controller.GetAllRayons(), bdgRayons, cbxDvdRayons);
+            lesEtatsDvd = controller.GetAllEtats();
+            cbxDvdExemplaireEtat.DataSource = lesEtatsDvd;
+            cbxDvdExemplaireEtat.SelectedIndex = -1;
             RemplirDvdListeComplete();
+            RemplirDvdExemplairesListe(null);
+            ActiverGestionEtatDvd(false);
         }
 
         /// <summary>
@@ -605,12 +775,15 @@ namespace MediaTekDocuments.view
                 {
                     Dvd dvd = (Dvd)bdgDvdListe.List[bdgDvdListe.Position];
                     AfficheDvdInfos(dvd);
+                    ChargerExemplairesDvdSelectionne(dvd);
                 }
                 catch
                 {
                     VideDvdInfos();
                     btnModifierDvd.Enabled = false;
                     btnSupprimerDvd.Enabled = false;
+                    RemplirDvdExemplairesListe(null);
+                    ActiverGestionEtatDvd(false);
                 }
             }
             else
@@ -618,6 +791,8 @@ namespace MediaTekDocuments.view
                 VideDvdInfos();
                 btnModifierDvd.Enabled = false;
                 btnSupprimerDvd.Enabled = false;
+                RemplirDvdExemplairesListe(null);
+                ActiverGestionEtatDvd(false);
             }
         }
 
@@ -708,6 +883,155 @@ namespace MediaTekDocuments.view
                     break;
             }
             RemplirDvdListe(sortedList);
+        }
+
+        /// <summary>
+        /// Charge les exemplaires du DVD sélectionné.
+        /// </summary>
+        /// <param name="dvd">DVD sélectionné</param>
+        private void ChargerExemplairesDvdSelectionne(Dvd dvd)
+        {
+            lesDvdExemplaires = controller.GetExemplairesDocument(dvd.Id);
+            RemplirDvdExemplairesListe(lesDvdExemplaires.OrderByDescending(x => x.DateAchat).ToList());
+            ActiverGestionEtatDvd(false);
+        }
+
+        /// <summary>
+        /// Remplit la liste des exemplaires de DVD.
+        /// </summary>
+        /// <param name="exemplaires">Liste d'exemplaires</param>
+        private void RemplirDvdExemplairesListe(List<Exemplaire> exemplaires)
+        {
+            if (exemplaires == null)
+            {
+                bdgDvdExemplairesListe.DataSource = null;
+                dgvDvdExemplairesListe.DataSource = bdgDvdExemplairesListe;
+                return;
+            }
+
+            bdgDvdExemplairesListe.DataSource = exemplaires;
+            dgvDvdExemplairesListe.DataSource = bdgDvdExemplairesListe;
+            dgvDvdExemplairesListe.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+
+            if (dgvDvdExemplairesListe.Columns["Id"] != null) dgvDvdExemplairesListe.Columns["Id"].Visible = false;
+            if (dgvDvdExemplairesListe.Columns["Photo"] != null) dgvDvdExemplairesListe.Columns["Photo"].Visible = false;
+            if (dgvDvdExemplairesListe.Columns["IdEtat"] != null) dgvDvdExemplairesListe.Columns["IdEtat"].Visible = false;
+
+            if (dgvDvdExemplairesListe.Columns["Numero"] != null) dgvDvdExemplairesListe.Columns["Numero"].DisplayIndex = 0;
+            if (dgvDvdExemplairesListe.Columns["DateAchat"] != null) dgvDvdExemplairesListe.Columns["DateAchat"].DisplayIndex = 1;
+            if (dgvDvdExemplairesListe.Columns["LibelleEtat"] != null) dgvDvdExemplairesListe.Columns["LibelleEtat"].DisplayIndex = 2;
+        }
+
+        /// <summary>
+        /// Active ou désactive la zone de changement d'état (DVD).
+        /// </summary>
+        /// <param name="actif">true pour activer</param>
+        private void ActiverGestionEtatDvd(bool actif)
+        {
+            cbxDvdExemplaireEtat.Enabled = actif;
+            btnDvdExemplaireModifierEtat.Enabled = actif;
+            btnDvdExemplaireSupprimer.Enabled = actif;
+            if (!actif)
+            {
+                cbxDvdExemplaireEtat.SelectedIndex = -1;
+            }
+        }
+
+        private void dgvDvdExemplairesListe_SelectionChanged(object sender, EventArgs e)
+        {
+            if (dgvDvdExemplairesListe.CurrentCell == null || bdgDvdExemplairesListe.Position < 0)
+            {
+                ActiverGestionEtatDvd(false);
+                return;
+            }
+
+            Exemplaire exemplaire = (Exemplaire)bdgDvdExemplairesListe.List[bdgDvdExemplairesListe.Position];
+            Etat etat = lesEtatsDvd.Find(x => x.Id.Equals(exemplaire.IdEtat));
+            if (etat != null)
+            {
+                cbxDvdExemplaireEtat.SelectedItem = etat;
+            }
+            else
+            {
+                cbxDvdExemplaireEtat.SelectedIndex = -1;
+            }
+            ActiverGestionEtatDvd(true);
+        }
+
+        private void dgvDvdExemplairesListe_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (lesDvdExemplaires == null || lesDvdExemplaires.Count == 0) return;
+
+            string titreColonne = dgvDvdExemplairesListe.Columns[e.ColumnIndex].HeaderText;
+            List<Exemplaire> sortedList = new List<Exemplaire>(lesDvdExemplaires);
+            switch (titreColonne)
+            {
+                case "Numero":
+                    sortedList = sortedList.OrderByDescending(o => o.Numero).ToList();
+                    break;
+                case "DateAchat":
+                    sortedList = sortedList.OrderByDescending(o => o.DateAchat).ToList();
+                    break;
+                case "LibelleEtat":
+                    sortedList = sortedList.OrderBy(o => o.LibelleEtat).ToList();
+                    break;
+            }
+            RemplirDvdExemplairesListe(sortedList);
+        }
+
+        private void btnDvdExemplaireModifierEtat_Click(object sender, EventArgs e)
+        {
+            if (bdgDvdListe.Position < 0 || bdgDvdExemplairesListe.Position < 0 || cbxDvdExemplaireEtat.SelectedItem == null)
+            {
+                return;
+            }
+            Dvd dvd = (Dvd)bdgDvdListe.List[bdgDvdListe.Position];
+            Exemplaire exemplaire = (Exemplaire)bdgDvdExemplairesListe.List[bdgDvdExemplairesListe.Position];
+            Etat etat = (Etat)cbxDvdExemplaireEtat.SelectedItem;
+
+            bool ok = controller.ModifierEtatExemplaire(dvd.Id, exemplaire.Numero, etat.Id);
+            if (ok)
+            {
+                ChargerExemplairesDvdSelectionne(dvd);
+            }
+            else
+            {
+                MessageBox.Show("Erreur lors de la modification de l'état.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnDvdExemplaireSupprimer_Click(object sender, EventArgs e)
+        {
+            if (bdgDvdListe.Position < 0 || bdgDvdExemplairesListe.Position < 0)
+            {
+                MessageBox.Show("Veuillez sélectionner un exemplaire à supprimer.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            Dvd dvd = (Dvd)bdgDvdListe.List[bdgDvdListe.Position];
+            Exemplaire exemplaire = (Exemplaire)bdgDvdExemplairesListe.List[bdgDvdExemplairesListe.Position];
+
+            if (MessageBox.Show(
+                "Êtes-vous sûr de vouloir supprimer l'exemplaire n°" + exemplaire.Numero + " ?",
+                "Confirmation",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question) != DialogResult.Yes)
+            {
+                return;
+            }
+
+            Access.ResultatSuppression resultat = controller.SupprimerExemplaire(dvd.Id, exemplaire.Numero);
+            switch (resultat)
+            {
+                case Access.ResultatSuppression.Succes:
+                    MessageBox.Show("Exemplaire supprimé avec succès.", "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    ChargerExemplairesDvdSelectionne(dvd);
+                    break;
+                case Access.ResultatSuppression.RefuseCommande:
+                case Access.ResultatSuppression.Erreur:
+                default:
+                    MessageBox.Show("Erreur lors de la suppression de l'exemplaire.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    break;
+            }
         }
 
         /// <summary>
@@ -2372,16 +2696,20 @@ namespace MediaTekDocuments.view
         #region Onglet Paarutions
         private readonly BindingSource bdgExemplairesListe = new BindingSource();
         private List<Exemplaire> lesExemplaires = new List<Exemplaire>();
+        private List<Etat> lesEtatsReception = new List<Etat>();
         const string ETATNEUF = "00001";
 
         /// <summary>
-        /// Ouverture de l'onglet : récupère le revues et vide tous les champs.
+        /// Ouverture de l'onglet : récupère les revues, les états et vide tous les champs.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void tabReceptionRevue_Enter(object sender, EventArgs e)
         {
             lesRevues = controller.GetAllRevues();
+            lesEtatsReception = controller.GetAllEtats();
+            cbxReceptionExemplaireEtat.DataSource = lesEtatsReception;
+            cbxReceptionExemplaireEtat.SelectedIndex = -1;
             txbReceptionRevueNumero.Text = "";
         }
 
@@ -2395,15 +2723,34 @@ namespace MediaTekDocuments.view
             {
                 bdgExemplairesListe.DataSource = exemplaires;
                 dgvReceptionExemplairesListe.DataSource = bdgExemplairesListe;
-                dgvReceptionExemplairesListe.Columns["idEtat"].Visible = false;
-                dgvReceptionExemplairesListe.Columns["id"].Visible = false;
                 dgvReceptionExemplairesListe.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-                dgvReceptionExemplairesListe.Columns["numero"].DisplayIndex = 0;
-                dgvReceptionExemplairesListe.Columns["dateAchat"].DisplayIndex = 1;
+                if (dgvReceptionExemplairesListe.Columns["Id"] != null) dgvReceptionExemplairesListe.Columns["Id"].Visible = false;
+                if (dgvReceptionExemplairesListe.Columns["Photo"] != null) dgvReceptionExemplairesListe.Columns["Photo"].Visible = false;
+                if (dgvReceptionExemplairesListe.Columns["IdEtat"] != null) dgvReceptionExemplairesListe.Columns["IdEtat"].Visible = false;
+                if (dgvReceptionExemplairesListe.Columns["Numero"] != null) dgvReceptionExemplairesListe.Columns["Numero"].DisplayIndex = 0;
+                if (dgvReceptionExemplairesListe.Columns["DateAchat"] != null) dgvReceptionExemplairesListe.Columns["DateAchat"].DisplayIndex = 1;
+                if (dgvReceptionExemplairesListe.Columns["LibelleEtat"] != null) dgvReceptionExemplairesListe.Columns["LibelleEtat"].DisplayIndex = 2;
             }
             else
             {
                 bdgExemplairesListe.DataSource = null;
+                dgvReceptionExemplairesListe.DataSource = bdgExemplairesListe;
+                ActiverGestionEtatReception(false);
+            }
+        }
+
+        /// <summary>
+        /// Active ou désactive la zone de changement d'état et suppression (Parutions).
+        /// </summary>
+        /// <param name="actif">true pour activer</param>
+        private void ActiverGestionEtatReception(bool actif)
+        {
+            cbxReceptionExemplaireEtat.Enabled = actif;
+            btnReceptionExemplaireModifierEtat.Enabled = actif;
+            btnReceptionExemplaireSupprimer.Enabled = actif;
+            if (!actif)
+            {
+                cbxReceptionExemplaireEtat.SelectedIndex = -1;
             }
         }
 
@@ -2576,18 +2923,20 @@ namespace MediaTekDocuments.view
         /// <param name="e"></param>
         private void dgvExemplairesListe_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
+            if (lesExemplaires == null || lesExemplaires.Count == 0) return;
+
             string titreColonne = dgvReceptionExemplairesListe.Columns[e.ColumnIndex].HeaderText;
-            List<Exemplaire> sortedList = new List<Exemplaire>();
+            List<Exemplaire> sortedList = new List<Exemplaire>(lesExemplaires);
             switch (titreColonne)
             {
                 case "Numero":
-                    sortedList = lesExemplaires.OrderBy(o => o.Numero).Reverse().ToList();
+                    sortedList = sortedList.OrderByDescending(o => o.Numero).ToList();
                     break;
                 case "DateAchat":
-                    sortedList = lesExemplaires.OrderBy(o => o.DateAchat).Reverse().ToList();
+                    sortedList = sortedList.OrderByDescending(o => o.DateAchat).ToList();
                     break;
-                case "Photo":
-                    sortedList = lesExemplaires.OrderBy(o => o.Photo).ToList();
+                case "LibelleEtat":
+                    sortedList = sortedList.OrderBy(o => o.LibelleEtat).ToList();
                     break;
             }
             RemplirReceptionExemplairesListe(sortedList);
@@ -2600,7 +2949,7 @@ namespace MediaTekDocuments.view
         /// <param name="e"></param>
         private void dgvReceptionExemplairesListe_SelectionChanged(object sender, EventArgs e)
         {
-            if (dgvReceptionExemplairesListe.CurrentCell != null)
+            if (dgvReceptionExemplairesListe.CurrentCell != null && bdgExemplairesListe.Position >= 0 && bdgExemplairesListe.List != null)
             {
                 Exemplaire exemplaire = (Exemplaire)bdgExemplairesListe.List[bdgExemplairesListe.Position];
                 string image = exemplaire.Photo;
@@ -2612,10 +2961,76 @@ namespace MediaTekDocuments.view
                 {
                     pcbReceptionExemplaireRevueImage.Image = null;
                 }
+                Etat etat = lesEtatsReception.Find(x => x.Id.Equals(exemplaire.IdEtat));
+                if (etat != null)
+                {
+                    cbxReceptionExemplaireEtat.SelectedItem = etat;
+                }
+                else
+                {
+                    cbxReceptionExemplaireEtat.SelectedIndex = -1;
+                }
+                ActiverGestionEtatReception(true);
             }
             else
             {
                 pcbReceptionExemplaireRevueImage.Image = null;
+                ActiverGestionEtatReception(false);
+            }
+        }
+
+        private void btnReceptionExemplaireModifierEtat_Click(object sender, EventArgs e)
+        {
+            if (bdgExemplairesListe.Position < 0 || cbxReceptionExemplaireEtat.SelectedItem == null || string.IsNullOrEmpty(txbReceptionRevueNumero.Text))
+            {
+                return;
+            }
+            string idDocument = txbReceptionRevueNumero.Text;
+            Exemplaire exemplaire = (Exemplaire)bdgExemplairesListe.List[bdgExemplairesListe.Position];
+            Etat etat = (Etat)cbxReceptionExemplaireEtat.SelectedItem;
+
+            bool ok = controller.ModifierEtatExemplaire(idDocument, exemplaire.Numero, etat.Id);
+            if (ok)
+            {
+                AfficheReceptionExemplairesRevue();
+            }
+            else
+            {
+                MessageBox.Show("Erreur lors de la modification de l'état.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnReceptionExemplaireSupprimer_Click(object sender, EventArgs e)
+        {
+            if (bdgExemplairesListe.Position < 0 || bdgExemplairesListe.List == null || string.IsNullOrEmpty(txbReceptionRevueNumero.Text))
+            {
+                MessageBox.Show("Veuillez sélectionner un exemplaire à supprimer.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            string idDocument = txbReceptionRevueNumero.Text;
+            Exemplaire exemplaire = (Exemplaire)bdgExemplairesListe.List[bdgExemplairesListe.Position];
+
+            if (MessageBox.Show(
+                "Êtes-vous sûr de vouloir supprimer la parution n°" + exemplaire.Numero + " ?",
+                "Confirmation",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question) != DialogResult.Yes)
+            {
+                return;
+            }
+
+            Access.ResultatSuppression resultat = controller.SupprimerExemplaire(idDocument, exemplaire.Numero);
+            switch (resultat)
+            {
+                case Access.ResultatSuppression.Succes:
+                    MessageBox.Show("Parution supprimée avec succès.", "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    AfficheReceptionExemplairesRevue();
+                    break;
+                case Access.ResultatSuppression.RefuseCommande:
+                case Access.ResultatSuppression.Erreur:
+                default:
+                    MessageBox.Show("Erreur lors de la suppression de la parution.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    break;
             }
         }
 		#endregion

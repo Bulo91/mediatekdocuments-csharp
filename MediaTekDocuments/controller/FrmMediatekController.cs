@@ -76,6 +76,14 @@ namespace MediaTekDocuments.controller
             return access.GetAllPublics();
         }
 
+        /// <summary>
+        /// Récupère tous les états
+        /// </summary>
+        /// <returns>Liste d'objets Etat</returns>
+        public List<Etat> GetAllEtats()
+        {
+            return access.GetAllEtats();
+        }
 
         /// <summary>
         /// récupère les exemplaires d'une revue
@@ -85,6 +93,28 @@ namespace MediaTekDocuments.controller
         public List<Exemplaire> GetExemplairesRevue(string idDocuement)
         {
             return access.GetExemplairesRevue(idDocuement);
+        }
+
+        /// <summary>
+        /// Récupère les exemplaires d'un document (livre, DVD ou revue)
+        /// </summary>
+        /// <param name="idDocument">id du document concerné</param>
+        /// <returns>Liste d'objets Exemplaire triée par dateAchat DESC</returns>
+        public List<Exemplaire> GetExemplairesDocument(string idDocument)
+        {
+            return access.GetExemplairesDocument(idDocument);
+        }
+
+        /// <summary>
+        /// Modifie l'état d'un exemplaire
+        /// </summary>
+        /// <param name="idDocument">id du document</param>
+        /// <param name="numero">numéro de l'exemplaire</param>
+        /// <param name="idEtat">nouvel id d'état</param>
+        /// <returns>true si la modification a pu se faire</returns>
+        public bool ModifierEtatExemplaire(string idDocument, int numero, string idEtat)
+        {
+            return access.ModifierEtatExemplaire(idDocument, numero, idEtat);
         }
 
         /// <summary>
@@ -264,6 +294,17 @@ namespace MediaTekDocuments.controller
         public Access.ResultatSuppression SupprimerLivre(string id)
         {
             return access.SupprimerLivre(id);
+        }
+
+        /// <summary>
+        /// Supprime un exemplaire dans la bdd (clé composite : id + numero).
+        /// </summary>
+        /// <param name="idDocument">Id du document (livre, DVD ou revue)</param>
+        /// <param name="numero">Numéro de l'exemplaire</param>
+        /// <returns>ResultatSuppression : Succes, RefuseCommande, ou Erreur</returns>
+        public Access.ResultatSuppression SupprimerExemplaire(string idDocument, int numero)
+        {
+            return access.SupprimerExemplaire(idDocument, numero);
         }
 
     }

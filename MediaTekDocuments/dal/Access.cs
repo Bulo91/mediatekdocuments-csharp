@@ -107,6 +107,16 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
+        /// Retourne tous les états à partir de la BDD
+        /// </summary>
+        /// <returns>Liste d'objets Etat</returns>
+        public List<Etat> GetAllEtats()
+        {
+            List<Etat> lesEtats = TraitementRecup<Etat>(GET, "etat", null);
+            return lesEtats ?? new List<Etat>();
+        }
+
+        /// <summary>
         /// Retourne toutes les livres à partir de la BDD
         /// </summary>
         /// <returns>Liste d'objets Livre</returns>
@@ -144,9 +154,42 @@ namespace MediaTekDocuments.dal
         /// <returns>Liste d'objets Exemplaire</returns>
         public List<Exemplaire> GetExemplairesRevue(string idDocument)
         {
+            return GetExemplairesDocument(idDocument);
+        }
+
+        /// <summary>
+        /// Retourne les exemplaires d'un document (livre, DVD ou revue)
+        /// </summary>
+        /// <param name="idDocument">id du document concerné</param>
+        /// <returns>Liste d'objets Exemplaire triée par dateAchat DESC</returns>
+        public List<Exemplaire> GetExemplairesDocument(string idDocument)
+        {
             String jsonIdDocument = convertToJson("id", idDocument);
             List<Exemplaire> lesExemplaires = TraitementRecup<Exemplaire>(GET, "exemplaire/" + jsonIdDocument, null);
-            return lesExemplaires;
+            return lesExemplaires ?? new List<Exemplaire>();
+        }
+
+        /// <summary>
+        /// Modifie l'état d'un exemplaire
+        /// </summary>
+        /// <param name="idDocument">id du document</param>
+        /// <param name="numero">numéro de l'exemplaire</param>
+        /// <param name="idEtat">nouvel id d'état</param>
+        /// <returns>true si la modification a pu se faire</returns>
+        public bool ModifierEtatExemplaire(string idDocument, int numero, string idEtat)
+        {
+            var obj = new { numero = numero, idEtat = idEtat };
+            String jsonChamps = JsonConvert.SerializeObject(obj);
+            try
+            {
+                String parametres = "champs=" + Uri.EscapeDataString(jsonChamps);
+                return TraitementEcrire(PUT, "exemplaire/" + Uri.EscapeDataString(idDocument), parametres);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return false;
         }
 
         /// <summary>
@@ -539,6 +582,28 @@ namespace MediaTekDocuments.dal
             {
                 String jsonChamps = convertToJson("id", id);
                 String message = "livre/" + Uri.EscapeDataString(jsonChamps);
+                return TraitementSupprimer(DELETE, message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return ResultatSuppression.Erreur;
+            }
+        }
+
+        /// <summary>
+        /// Supprime un exemplaire en base de données (clé composite : id + numero).
+        /// </summary>
+        /// <param name="idDocument">Id du document (livre, DVD ou revue)</param>
+        /// <param name="numero">Numéro de l'exemplaire</param>
+        /// <returns>ResultatSuppression : Succes, RefuseCommande, ou Erreur</returns>
+        public ResultatSuppression SupprimerExemplaire(string idDocument, int numero)
+        {
+            try
+            {
+                var obj = new { id = idDocument, numero = numero };
+                String jsonChamps = JsonConvert.SerializeObject(obj);
+                String message = "exemplaire/" + Uri.EscapeDataString(jsonChamps);
                 return TraitementSupprimer(DELETE, message);
             }
             catch (Exception ex)
