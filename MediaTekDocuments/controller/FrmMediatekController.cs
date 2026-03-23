@@ -23,6 +23,17 @@ namespace MediaTekDocuments.controller
         }
 
         /// <summary>
+        /// Authentifie un utilisateur par login et mot de passe.
+        /// </summary>
+        /// <param name="login">Login de l'utilisateur</param>
+        /// <param name="motDePasse">Mot de passe</param>
+        /// <returns>Utilisateur avec droits si authentification réussie, null sinon</returns>
+        public Utilisateur AuthentifierUtilisateur(string login, string motDePasse)
+        {
+            return access.AuthentifierUtilisateur(login, motDePasse);
+        }
+
+        /// <summary>
         /// getter sur la liste des genres
         /// </summary>
         /// <returns>Liste d'objets Genre</returns>

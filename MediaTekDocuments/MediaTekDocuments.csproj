@@ -94,6 +94,12 @@
     <Compile Include="view\FrmAlertAbonnementsRevues.Designer.cs">
       <DependentUpon>FrmAlertAbonnementsRevues.cs</DependentUpon>
     </Compile>
+    <Compile Include="view\FrmConnexion.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="view\FrmConnexion.Designer.cs">
+      <DependentUpon>FrmConnexion.cs</DependentUpon>
+    </Compile>
     <Compile Include="model\AbonnementRevue.cs" />
     <Compile Include="model\AlerteAbonnementRevue.cs" />
     <Compile Include="model\Categorie.cs" />
@@ -108,6 +114,8 @@
     <Compile Include="model\Public.cs" />
     <Compile Include="model\Rayon.cs" />
     <Compile Include="model\Revue.cs" />
+    <Compile Include="model\Utilisateur.cs" />
+    <Compile Include="model\UtilisateurConnecte.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">

@@ -1,4 +1,4 @@
-﻿using MediaTekDocuments.view;
+using MediaTekDocuments.view;
 using System;
 using System.Windows.Forms;
 
@@ -14,7 +14,14 @@ namespace MediaTekDocuments
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new FrmMediatek());
+
+            using (var frmConnexion = new FrmConnexion())
+            {
+                if (frmConnexion.ShowDialog() == DialogResult.OK)
+                {
+                    Application.Run(new FrmMediatek());
+                }
+            }
         }
     }
 }

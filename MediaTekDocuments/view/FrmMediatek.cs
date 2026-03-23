@@ -35,20 +35,63 @@ namespace MediaTekDocuments.view
 		}
 
         /// <summary>
-        /// Au démarrage : alerte si des abonnements de revues expirent dans moins de 30 jours.
+        /// Au démarrage : applique les droits, affiche l'alerte abonnements si accès aux commandes.
         /// </summary>
         private void FrmMediatek_Load(object sender, EventArgs e)
         {
-            var alertes = controller.GetAbonnementsRevuesFinProche()
-                .OrderBy(a => a.DateFinAbonnement)
-                .ToList();
-            if (alertes.Count > 0)
+            if (!AppliquerDroitsUtilisateur())
+                return;
+
+            if (UtilisateurConnecte.Instance.AccesCommandes)
             {
-                using (FrmAlertAbonnementsRevues frm = new FrmAlertAbonnementsRevues(alertes))
+                var alertes = controller.GetAbonnementsRevuesFinProche()
+                    .OrderBy(a => a.DateFinAbonnement)
+                    .ToList();
+                if (alertes.Count > 0)
                 {
-                    frm.ShowDialog(this);
+                    using (FrmAlertAbonnementsRevues frm = new FrmAlertAbonnementsRevues(alertes))
+                    {
+                        frm.ShowDialog(this);
+                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// Applique les restrictions d'accès selon les droits de l'utilisateur connecté.
+        /// </summary>
+        /// <returns>false si l'utilisateur n'a aucun droit (Culture) : message affiché et fenêtre fermée ; true sinon</returns>
+        private bool AppliquerDroitsUtilisateur()
+        {
+            var utilisateur = UtilisateurConnecte.Instance;
+            if (utilisateur == null)
+            {
+                MessageBox.Show("Session invalide.", "Accès refusé", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                Close();
+                return false;
+            }
+
+            if (!utilisateur.AccesDocuments && !utilisateur.AccesCommandes && !utilisateur.AccesExemplaires)
+            {
+                MessageBox.Show("Vos droits ne sont pas suffisants pour accéder à l'application.",
+                    "Accès refusé", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                Close();
+                return false;
+            }
+
+            tabLivres.Visible = utilisateur.AccesDocuments;
+            tabDvd.Visible = utilisateur.AccesDocuments;
+            tabRevues.Visible = utilisateur.AccesDocuments;
+
+            tabCommandesLivres.Visible = utilisateur.AccesCommandes;
+            tabCommandesDvd.Visible = utilisateur.AccesCommandes;
+            tabCommandesRevues.Visible = utilisateur.AccesCommandes;
+
+            tabReceptionRevue.Visible = utilisateur.AccesExemplaires;
+            grpLivresExemplaires.Visible = utilisateur.AccesExemplaires;
+            grpDvdExemplaires.Visible = utilisateur.AccesExemplaires;
+
+            return true;
         }
 
         /// <summary>

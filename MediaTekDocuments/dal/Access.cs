@@ -76,11 +76,38 @@ namespace MediaTekDocuments.dal
             return instance;
         }
 
-        /// <summary>
-        /// Retourne tous les genres à partir de la BDD
-        /// </summary>
-        /// <returns>Liste d'objets Genre</returns>
-        public List<Categorie> GetAllGenres()
+		/// <summary>
+		/// Authentifie un utilisateur par login et mot de passe.
+		/// Appelle l'API en GET et retourne le premier utilisateur trouvé.
+		/// </summary>
+		/// <param name="login">Login de l'utilisateur</param>
+		/// <param name="motDePasse">Mot de passe en clair</param>
+		/// <returns>Utilisateur avec droits, ou null si authentification échouée</returns>
+		public Utilisateur AuthentifierUtilisateur(string login, string motDePasse)
+		{
+			try
+			{
+				var obj = new { login = login, motDePasse = motDePasse };
+				string jsonChamps = JsonConvert.SerializeObject(obj);
+				List<Utilisateur> utilisateurs = TraitementRecup<Utilisateur>(
+					GET,
+					"authentification/" + jsonChamps,
+					null
+				);
+				return (utilisateurs != null && utilisateurs.Count > 0) ? utilisateurs[0] : null;
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("Erreur authentification : " + ex.Message);
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// Retourne tous les genres à partir de la BDD
+		/// </summary>
+		/// <returns>Liste d'objets Genre</returns>
+		public List<Categorie> GetAllGenres()
         {
             IEnumerable<Genre> lesGenres = TraitementRecup<Genre>(GET, "genre", null);
             return new List<Categorie>(lesGenres);
