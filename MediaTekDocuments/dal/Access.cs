@@ -7,6 +7,7 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using System.Configuration;
 using System.Linq;
+using Serilog;
 
 namespace MediaTekDocuments.dal
 {
@@ -18,7 +19,7 @@ namespace MediaTekDocuments.dal
         /// <summary>
         /// adresse de l'API
         /// </summary>
-        private static readonly string uriApi = "http://localhost/rest_mediatekdocuments/";
+        private static readonly string uriApi = ConfigurationManager.AppSettings["uriApi"];
         /// <summary>
         /// instance unique de la classe
         /// </summary>
@@ -43,6 +44,10 @@ namespace MediaTekDocuments.dal
         /// méthode HTTP pour delete
         /// </summary>
         private const string DELETE = "DELETE";
+        /// <summary>
+        /// préfixe des paramètres POST/PUT pour l'API
+        /// </summary>
+        private const string CHAMPS = "champs=";
 
         /// <summary>
         /// Méthode privée pour créer un singleton
@@ -50,15 +55,21 @@ namespace MediaTekDocuments.dal
         /// </summary>
         private Access()
         {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .WriteTo.Console()
+                .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
+                .CreateLogger();
+
             String authenticationString;
             try
             {
-                authenticationString = "admin:adminpwd";
+                authenticationString = ConfigurationManager.AppSettings["apiAuthenticationString"];
                 api = ApiRest.GetInstance(uriApi, authenticationString);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Log.Error(e, "Erreur configuration API : {Message}", e.Message);
                 Environment.Exit(0);
             }
         }
@@ -98,7 +109,7 @@ namespace MediaTekDocuments.dal
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine("Erreur authentification : " + ex.Message);
+				Log.Error(ex, "Erreur authentification : {Message}", ex.Message);
 				return null;
 			}
 		}
@@ -209,12 +220,12 @@ namespace MediaTekDocuments.dal
             String jsonChamps = JsonConvert.SerializeObject(obj);
             try
             {
-                String parametres = "champs=" + Uri.EscapeDataString(jsonChamps);
+                String parametres = CHAMPS + Uri.EscapeDataString(jsonChamps);
                 return TraitementEcrire(PUT, "exemplaire/" + Uri.EscapeDataString(idDocument), parametres);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur ModifierEtatExemplaire : {Message}", ex.Message);
             }
             return false;
         }
@@ -242,12 +253,12 @@ namespace MediaTekDocuments.dal
             String jsonChamps = CommandeDocumentToChampsJson(commande);
             try
             {
-                String parametres = "champs=" + Uri.EscapeDataString(jsonChamps);
+                String parametres = CHAMPS + Uri.EscapeDataString(jsonChamps);
                 return TraitementEcrire(POST, "commandedocument", parametres);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur CreerCommandeDocument : {Message}", ex.Message);
             }
             return false;
         }
@@ -264,12 +275,12 @@ namespace MediaTekDocuments.dal
             String jsonChamps = JsonConvert.SerializeObject(obj);
             try
             {
-                String parametres = "champs=" + Uri.EscapeDataString(jsonChamps);
+                String parametres = CHAMPS + Uri.EscapeDataString(jsonChamps);
                 return TraitementEcrire(PUT, "commandedocument/" + Uri.EscapeDataString(idCommande), parametres);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur ModifierSuiviCommandeDocument : {Message}", ex.Message);
             }
             return false;
         }
@@ -290,7 +301,7 @@ namespace MediaTekDocuments.dal
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur SupprimerCommandeDocument : {Message}", ex.Message);
                 return ResultatSuppression.Erreur;
             }
         }
@@ -327,12 +338,12 @@ namespace MediaTekDocuments.dal
             String jsonChamps = AbonnementRevueToChampsJson(abonnement);
             try
             {
-                String parametres = "champs=" + Uri.EscapeDataString(jsonChamps);
+                String parametres = CHAMPS + Uri.EscapeDataString(jsonChamps);
                 return TraitementEcrire(POST, "commandesrevue", parametres);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur CreerCommandeRevue : {Message}", ex.Message);
             }
             return false;
         }
@@ -353,7 +364,7 @@ namespace MediaTekDocuments.dal
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur SupprimerCommandeRevue : {Message}", ex.Message);
                 return ResultatSuppression.Erreur;
             }
         }
@@ -399,12 +410,12 @@ namespace MediaTekDocuments.dal
             String jsonRevue = RevueToChampsJson(revue);
             try
             {
-                String parametres = "champs=" + Uri.EscapeDataString(jsonRevue);
+                String parametres = CHAMPS + Uri.EscapeDataString(jsonRevue);
                 return TraitementEcrire(POST, "revue", parametres);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur CreerRevue : {Message}", ex.Message);
             }
             return false;
         }
@@ -419,12 +430,12 @@ namespace MediaTekDocuments.dal
             String jsonRevue = RevueToChampsJson(revue);
             try
             {
-                String parametres = "champs=" + Uri.EscapeDataString(jsonRevue);
+                String parametres = CHAMPS + Uri.EscapeDataString(jsonRevue);
                 return TraitementEcrire(PUT, "revue/" + Uri.EscapeDataString(revue.Id), parametres);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur ModifierRevue : {Message}", ex.Message);
             }
             return false;
         }
@@ -458,12 +469,12 @@ namespace MediaTekDocuments.dal
             String jsonDvd = DvdToChampsJson(dvd);
             try
             {
-                String parametres = "champs=" + Uri.EscapeDataString(jsonDvd);
+                String parametres = CHAMPS + Uri.EscapeDataString(jsonDvd);
                 return TraitementEcrire(POST, "dvd", parametres);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur CreerDvd : {Message}", ex.Message);
             }
             return false;
         }
@@ -478,12 +489,12 @@ namespace MediaTekDocuments.dal
             String jsonDvd = DvdToChampsJson(dvd);
             try
             {
-                String parametres = "champs=" + Uri.EscapeDataString(jsonDvd);
+                String parametres = CHAMPS + Uri.EscapeDataString(jsonDvd);
                 return TraitementEcrire(PUT, "dvd/" + Uri.EscapeDataString(dvd.Id), parametres);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur ModifierDvd : {Message}", ex.Message);
             }
             return false;
         }
@@ -518,12 +529,12 @@ namespace MediaTekDocuments.dal
             String jsonLivre = LivreToChampsJson(livre);
             try
             {
-                String parametres = "champs=" + Uri.EscapeDataString(jsonLivre);
+                String parametres = CHAMPS + Uri.EscapeDataString(jsonLivre);
                 return TraitementEcrire(POST, "livre", parametres);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur CreerLivre : {Message}", ex.Message);
             }
             return false;
         }
@@ -538,12 +549,12 @@ namespace MediaTekDocuments.dal
             String jsonLivre = LivreToChampsJson(livre);
             try
             {
-                String parametres = "champs=" + Uri.EscapeDataString(jsonLivre);
+                String parametres = CHAMPS + Uri.EscapeDataString(jsonLivre);
                 return TraitementEcrire(PUT, "livre/" + Uri.EscapeDataString(livre.Id), parametres);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur ModifierLivre : {Message}", ex.Message);
             }
             return false;
         }
@@ -573,7 +584,7 @@ namespace MediaTekDocuments.dal
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur SupprimerRevue : {Message}", ex.Message);
                 return ResultatSuppression.Erreur;
             }
         }
@@ -593,7 +604,7 @@ namespace MediaTekDocuments.dal
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur SupprimerDvd : {Message}", ex.Message);
                 return ResultatSuppression.Erreur;
             }
         }
@@ -613,7 +624,7 @@ namespace MediaTekDocuments.dal
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur SupprimerLivre : {Message}", ex.Message);
                 return ResultatSuppression.Erreur;
             }
         }
@@ -635,7 +646,7 @@ namespace MediaTekDocuments.dal
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur SupprimerExemplaire : {Message}", ex.Message);
                 return ResultatSuppression.Erreur;
             }
         }
@@ -654,7 +665,7 @@ namespace MediaTekDocuments.dal
                 int codeValue;
                 if (!int.TryParse(codeToken.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out codeValue) || codeValue != 200)
                 {
-                    Console.WriteLine("code erreur = " + codeToken?.ToString() + " message = " + retour["message"]?.ToString());
+                    Log.Error("TraitementSupprimer - code erreur = {Code} message = {Message}", codeToken?.ToString(), retour["message"]?.ToString());
                     return ResultatSuppression.Erreur;
                 }
                 var resultToken = retour["result"];
@@ -666,7 +677,7 @@ namespace MediaTekDocuments.dal
             }
             catch (Exception e)
             {
-                Console.WriteLine("Erreur lors de l'accès à l'API : " + e.Message);
+                Log.Error(e, "Erreur lors de l'accès à l'API (TraitementSupprimer) : {Message}", e.Message);
                 return ResultatSuppression.Erreur;
             }
         }
@@ -704,7 +715,7 @@ namespace MediaTekDocuments.dal
                 int codeValue;
                 if (!int.TryParse(codeToken.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out codeValue) || codeValue != 200)
                 {
-                    Console.WriteLine("code erreur = " + codeToken?.ToString() + " message = " + retour["message"]?.ToString());
+                    Log.Error("TraitementEcrire - code erreur = {Code} message = {Message}", codeToken?.ToString(), retour["message"]?.ToString());
                     return false;
                 }
                 var resultToken = retour["result"];
@@ -716,7 +727,7 @@ namespace MediaTekDocuments.dal
             }
             catch (Exception e)
             {
-                Console.WriteLine("Erreur lors de l'accès à l'API : " + e.Message);
+                Log.Error(e, "Erreur lors de l'accès à l'API (TraitementEcrire) : {Message}", e.Message);
                 return false;
             }
         }
@@ -731,12 +742,12 @@ namespace MediaTekDocuments.dal
             String jsonExemplaire = JsonConvert.SerializeObject(exemplaire, new CustomDateTimeConverter());
             try
             {
-                List<Exemplaire> liste = TraitementRecup<Exemplaire>(POST, "exemplaire", "champs=" + jsonExemplaire);
+                List<Exemplaire> liste = TraitementRecup<Exemplaire>(POST, "exemplaire", CHAMPS + jsonExemplaire);
                 return (liste != null);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Log.Error(ex, "Erreur CreerExemplaire : {Message}", ex.Message);
             }
             return false;
         }
@@ -751,7 +762,6 @@ namespace MediaTekDocuments.dal
         /// <returns>liste d'objets récupérés (ou liste vide)</returns>
         private List<T> TraitementRecup<T> (String methode, String message, String parametres)
         {
-            // trans
             List<T> liste = new List<T>();
             try
             {
@@ -770,11 +780,11 @@ namespace MediaTekDocuments.dal
                 }
                 else
                 {
-                    Console.WriteLine("code erreur = " + code + " message = " + (String)retour["message"]);
+                    Log.Error("TraitementRecup - code erreur = {Code} message = {Message}", code, (String)retour["message"]);
                 }
             }catch(Exception e)
             {
-                Console.WriteLine("Erreur lors de l'accès à l'API : "+e.Message);
+                Log.Error(e, "Erreur lors de l'accès à l'API (TraitementRecup) : {Message}", e.Message);
                 Environment.Exit(0);
             }
             return liste;
@@ -786,7 +796,7 @@ namespace MediaTekDocuments.dal
         /// <param name="nom"></param>
         /// <param name="valeur"></param>
         /// <returns>couple au format json</returns>
-        private String convertToJson(Object nom, Object valeur)
+        private static String convertToJson(Object nom, Object valeur)
         {
             Dictionary<Object, Object> dictionary = new Dictionary<Object, Object>();
             dictionary.Add(nom, valeur);
