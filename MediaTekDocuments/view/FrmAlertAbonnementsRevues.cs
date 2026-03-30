@@ -10,6 +10,10 @@ namespace MediaTekDocuments.view
     /// </summary>
     public partial class FrmAlertAbonnementsRevues : Form
     {
+        /// <summary>
+        /// Initialise la fenêtre d'alerte et remplit la grille avec les abonnements concernés.
+        /// </summary>
+        /// <param name="alertes">Liste des revues à risque (titre et date de fin d'abonnement).</param>
         public FrmAlertAbonnementsRevues(List<AlerteAbonnementRevue> alertes)
         {
             InitializeComponent();

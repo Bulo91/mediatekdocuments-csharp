@@ -10,8 +10,14 @@ namespace MediaTekDocuments.view
     /// </summary>
     public partial class FrmConnexion : Form
     {
+        /// <summary>
+        /// Contrôleur utilisé pour l'authentification via la couche d'accès aux données.
+        /// </summary>
         private readonly FrmMediatekController controller;
 
+        /// <summary>
+        /// Initialise la fenêtre de connexion et le contrôleur associé.
+        /// </summary>
         public FrmConnexion()
         {
             InitializeComponent();
@@ -19,8 +25,10 @@ namespace MediaTekDocuments.view
         }
 
         /// <summary>
-        /// Clic sur Valider : authentifie l'utilisateur et ferme avec OK si succès.
+        /// Gère le clic sur Valider : authentifie l'utilisateur et ferme avec OK si succès.
         /// </summary>
+        /// <param name="sender">Source de l'événement.</param>
+        /// <param name="e">Données de l'événement.</param>
         private void BtnValider_Click(object sender, EventArgs e)
         {
             string login = txbLogin.Text?.Trim() ?? "";
@@ -49,8 +57,10 @@ namespace MediaTekDocuments.view
         }
 
         /// <summary>
-        /// Clic sur Annuler : ferme avec Cancel.
+        /// Gère le clic sur Annuler : ferme la fenêtre avec le résultat Cancel.
         /// </summary>
+        /// <param name="sender">Source de l'événement.</param>
+        /// <param name="e">Données de l'événement.</param>
         private void BtnAnnuler_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.Cancel;

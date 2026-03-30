@@ -12,7 +12,7 @@ namespace MediaTekDocuments.view
 
 {
     /// <summary>
-    /// Classe d'affichage
+    /// Fenêtre principale de l'application : consultation et gestion des documents, commandes et exemplaires selon les droits utilisateur.
     /// </summary>
     public partial class FrmMediatek : Form
     {
@@ -521,6 +521,11 @@ namespace MediaTekDocuments.view
             }
         }
 
+        /// <summary>
+        /// Met à jour le combo d'état lorsque la sélection change dans la grille des exemplaires (livres).
+        /// </summary>
+        /// <param name="sender">Source de l'événement.</param>
+        /// <param name="e">Données de l'événement.</param>
         private void dgvLivresExemplairesListe_SelectionChanged(object sender, EventArgs e)
         {
             if (dgvLivresExemplairesListe.CurrentCell == null || bdgLivresExemplairesListe.Position < 0)
@@ -542,6 +547,11 @@ namespace MediaTekDocuments.view
             ActiverGestionEtatLivre(true);
         }
 
+        /// <summary>
+        /// Trie la liste des exemplaires du livre selon la colonne cliquée (numéro, date d'achat, état).
+        /// </summary>
+        /// <param name="sender">Source de l'événement.</param>
+        /// <param name="e">Informations sur la colonne cliquée.</param>
         private void dgvLivresExemplairesListe_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
             if (lesLivresExemplaires == null || lesLivresExemplaires.Count == 0) return;
@@ -563,6 +573,11 @@ namespace MediaTekDocuments.view
             RemplirLivresExemplairesListe(sortedList);
         }
 
+        /// <summary>
+        /// Enregistre le nouvel état de l'exemplaire sélectionné pour le livre courant.
+        /// </summary>
+        /// <param name="sender">Source de l'événement.</param>
+        /// <param name="e">Données de l'événement.</param>
         private void btnLivresExemplaireModifierEtat_Click(object sender, EventArgs e)
         {
             if (bdgLivresListe.Position < 0 || bdgLivresExemplairesListe.Position < 0 || cbxLivresExemplaireEtat.SelectedItem == null)
@@ -584,6 +599,11 @@ namespace MediaTekDocuments.view
             }
         }
 
+        /// <summary>
+        /// Demande confirmation puis supprime l'exemplaire sélectionné (livre) via l'API.
+        /// </summary>
+        /// <param name="sender">Source de l'événement.</param>
+        /// <param name="e">Données de l'événement.</param>
         private void btnLivresExemplaireSupprimer_Click(object sender, EventArgs e)
         {
             if (bdgLivresListe.Position < 0 || bdgLivresExemplairesListe.Position < 0)
@@ -1008,6 +1028,11 @@ namespace MediaTekDocuments.view
             }
         }
 
+        /// <summary>
+        /// Met à jour le combo d'état lorsque la sélection change dans la grille des exemplaires (DVD).
+        /// </summary>
+        /// <param name="sender">Source de l'événement.</param>
+        /// <param name="e">Données de l'événement.</param>
         private void dgvDvdExemplairesListe_SelectionChanged(object sender, EventArgs e)
         {
             if (dgvDvdExemplairesListe.CurrentCell == null || bdgDvdExemplairesListe.Position < 0)
@@ -1029,6 +1054,11 @@ namespace MediaTekDocuments.view
             ActiverGestionEtatDvd(true);
         }
 
+        /// <summary>
+        /// Trie la liste des exemplaires du DVD selon la colonne cliquée.
+        /// </summary>
+        /// <param name="sender">Source de l'événement.</param>
+        /// <param name="e">Informations sur la colonne cliquée.</param>
         private void dgvDvdExemplairesListe_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
             if (lesDvdExemplaires == null || lesDvdExemplaires.Count == 0) return;
@@ -1050,6 +1080,11 @@ namespace MediaTekDocuments.view
             RemplirDvdExemplairesListe(sortedList);
         }
 
+        /// <summary>
+        /// Enregistre le nouvel état de l'exemplaire sélectionné pour le DVD courant.
+        /// </summary>
+        /// <param name="sender">Source de l'événement.</param>
+        /// <param name="e">Données de l'événement.</param>
         private void btnDvdExemplaireModifierEtat_Click(object sender, EventArgs e)
         {
             if (bdgDvdListe.Position < 0 || bdgDvdExemplairesListe.Position < 0 || cbxDvdExemplaireEtat.SelectedItem == null)
@@ -1071,6 +1106,11 @@ namespace MediaTekDocuments.view
             }
         }
 
+        /// <summary>
+        /// Demande confirmation puis supprime l'exemplaire sélectionné (DVD) via l'API.
+        /// </summary>
+        /// <param name="sender">Source de l'événement.</param>
+        /// <param name="e">Données de l'événement.</param>
         private void btnDvdExemplaireSupprimer_Click(object sender, EventArgs e)
         {
             if (bdgDvdListe.Position < 0 || bdgDvdExemplairesListe.Position < 0)
@@ -2575,6 +2615,11 @@ namespace MediaTekDocuments.view
         private readonly BindingSource bdgCommandesRevuesListe = new BindingSource();
         private List<Revue> lesRevuesCommandes = new List<Revue>();
 
+        /// <summary>
+        /// À l'entrée de l'onglet : charge la liste des revues et réinitialise les champs de recherche et de saisie.
+        /// </summary>
+        /// <param name="sender">Source de l'événement.</param>
+        /// <param name="e">Données de l'événement.</param>
         private void tabCommandesRevues_Enter(object sender, EventArgs e)
         {
             lesRevuesCommandes = controller.GetAllRevues();
@@ -2583,6 +2628,9 @@ namespace MediaTekDocuments.view
             VideCommandesRevuesNouvelleCommande();
         }
 
+        /// <summary>
+        /// Efface les informations affichées et la grille des abonnements pour l'onglet commandes revues.
+        /// </summary>
         private void VideCommandesRevuesZones()
         {
             txbCommandesRevuesTitre.Text = "";
@@ -2593,6 +2641,9 @@ namespace MediaTekDocuments.view
             btnSupprimerCommandeRevue.Enabled = false;
         }
 
+        /// <summary>
+        /// Réinitialise les champs du groupe « nouvelle commande » d'abonnement (dates et montant par défaut).
+        /// </summary>
         private void VideCommandesRevuesNouvelleCommande()
         {
             dtpCommandesRevuesDateCommande.Value = DateTime.Now;
@@ -2600,6 +2651,11 @@ namespace MediaTekDocuments.view
             dtpCommandesRevuesDateFinAbonnement.Value = DateTime.Now.AddYears(1);
         }
 
+        /// <summary>
+        /// Lorsque le numéro de revue est modifié, efface le détail affiché et la liste des commandes.
+        /// </summary>
+        /// <param name="sender">Source de l'événement.</param>
+        /// <param name="e">Données de l'événement.</param>
         private void txbCommandesRevuesNumero_TextChanged(object sender, EventArgs e)
         {
             txbCommandesRevuesTitre.Text = "";
@@ -2610,6 +2666,11 @@ namespace MediaTekDocuments.view
             btnSupprimerCommandeRevue.Enabled = false;
         }
 
+        /// <summary>
+        /// Recherche une revue par identifiant et affiche ses informations et la liste de ses abonnements.
+        /// </summary>
+        /// <param name="sender">Source de l'événement.</param>
+        /// <param name="e">Données de l'événement.</param>
         private void btnCommandesRevuesRechercher_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txbCommandesRevuesNumero.Text))
@@ -2627,6 +2688,10 @@ namespace MediaTekDocuments.view
             }
         }
 
+        /// <summary>
+        /// Affiche les informations de la revue et charge les abonnements associés (tri par date de commande décroissante).
+        /// </summary>
+        /// <param name="revue">Revue sélectionnée.</param>
         private void AfficheCommandesRevuesInfos(Revue revue)
         {
             txbCommandesRevuesNumero.Text = revue.Id;
@@ -2640,6 +2705,10 @@ namespace MediaTekDocuments.view
             RemplirCommandesRevuesListe(commandes);
         }
 
+        /// <summary>
+        /// Lie la liste d'abonnements au grille et masque les colonnes techniques si présentes.
+        /// </summary>
+        /// <param name="commandes">Liste des abonnements à afficher.</param>
         private void RemplirCommandesRevuesListe(List<AbonnementRevue> commandes)
         {
             bdgCommandesRevuesListe.DataSource = commandes;
@@ -2651,6 +2720,11 @@ namespace MediaTekDocuments.view
             dgvCommandesRevues.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
         }
 
+        /// <summary>
+        /// Trie la grille des abonnements de revue selon la colonne d'en-tête cliquée.
+        /// </summary>
+        /// <param name="sender">Source de l'événement.</param>
+        /// <param name="e">Informations sur la colonne cliquée.</param>
         private void dgvCommandesRevues_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
             var commandesActuelles = bdgCommandesRevuesListe.List?.Cast<AbonnementRevue>().ToList();
@@ -2676,12 +2750,22 @@ namespace MediaTekDocuments.view
             RemplirCommandesRevuesListe(sortedList);
         }
 
+        /// <summary>
+        /// Active ou désactive le bouton de suppression selon qu'une ligne d'abonnement est sélectionnée.
+        /// </summary>
+        /// <param name="sender">Source de l'événement.</param>
+        /// <param name="e">Données de l'événement.</param>
         private void dgvCommandesRevues_SelectionChanged(object sender, EventArgs e)
         {
             AbonnementRevue abo = dgvCommandesRevues.SelectedRows.Count > 0 ? dgvCommandesRevues.SelectedRows[0].DataBoundItem as AbonnementRevue : null;
             btnSupprimerCommandeRevue.Enabled = abo != null;
         }
 
+        /// <summary>
+        /// Supprime l'abonnement sélectionné après vérifications, puis rafraîchit la liste.
+        /// </summary>
+        /// <param name="sender">Source de l'événement.</param>
+        /// <param name="e">Données de l'événement.</param>
         private void btnSupprimerCommandeRevue_Click(object sender, EventArgs e)
         {
             if (!(bdgCommandesRevuesListe.Current is AbonnementRevue abo))
@@ -2725,6 +2809,11 @@ namespace MediaTekDocuments.view
             }
         }
 
+        /// <summary>
+        /// Crée un nouvel abonnement de revue à partir des dates et du montant saisis, puis rafraîchit la grille.
+        /// </summary>
+        /// <param name="sender">Source de l'événement.</param>
+        /// <param name="e">Données de l'événement.</param>
         private void btnAjouterCommandeRevue_Click(object sender, EventArgs e)
         {
             string idRevue = txbCommandesRevuesNumero.Text?.Trim();

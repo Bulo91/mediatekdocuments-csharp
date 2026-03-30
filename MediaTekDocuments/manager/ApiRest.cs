@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
 
 namespace MediaTekDocuments.manager
 {
     /// <summary>
-    /// Classe indépendante d'accès à une api rest avec éventuellement une "basic authorization"
+    /// Client HTTP singleton pour appeler l'API REST distante, avec authentification Basic optionnelle.
     /// </summary>
     class ApiRest
     {
@@ -39,11 +39,11 @@ namespace MediaTekDocuments.manager
         }
 
         /// <summary>
-        /// Crée une instance unique de la classe
+        /// Retourne l'instance unique du client HTTP configuré pour l'API REST.
         /// </summary>
-        /// <param name="uriApi">adresse de l'api</param>
-        /// <param name="authenticationString">chaîne d'authentificatio (login:pwd)</param>
-        /// <returns></returns>
+        /// <param name="uriApi">Adresse de base de l'API.</param>
+        /// <param name="authenticationString">Chaîne d'authentification Basic (login:mot de passe), ou vide.</param>
+        /// <returns>L'instance singleton de <see cref="ApiRest"/>.</returns>
         public static ApiRest GetInstance(String uriApi, String authenticationString)
         {
             if(instance == null)

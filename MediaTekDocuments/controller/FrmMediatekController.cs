@@ -5,7 +5,7 @@ using MediaTekDocuments.dal;
 namespace MediaTekDocuments.controller
 {
     /// <summary>
-    /// Contrôleur lié à FrmMediatek
+    /// Contrôleur de la fenêtre principale : délègue toutes les opérations métier à la couche <see cref="Access"/>.
     /// </summary>
     class FrmMediatekController
     {
@@ -15,7 +15,7 @@ namespace MediaTekDocuments.controller
         private readonly Access access;
 
         /// <summary>
-        /// Récupération de l'instance unique d'accès aux données
+        /// Initialise le contrôleur et obtient l'instance singleton de la couche d'accès aux données.
         /// </summary>
         public FrmMediatekController()
         {
@@ -180,8 +180,9 @@ namespace MediaTekDocuments.controller
         }
 
         /// <summary>
-        /// Revues dont l'abonnement expire dans les 30 prochains jours.
+        /// Retourne les revues dont l'abonnement expire dans les trente prochains jours.
         /// </summary>
+        /// <returns>Liste d'alertes titre / date de fin, ou liste vide.</returns>
         public List<AlerteAbonnementRevue> GetAbonnementsRevuesFinProche()
         {
             return access.GetAbonnementsRevuesFinProche();

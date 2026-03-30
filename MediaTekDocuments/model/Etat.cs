@@ -1,14 +1,25 @@
-﻿
+
 namespace MediaTekDocuments.model
 {
     /// <summary>
-    /// Classe métier Etat (état d'usure d'un document)
+    /// Représente l'état d'usure d'un exemplaire (neuf, usagé, etc.).
     /// </summary>
     public class Etat
     {
+        /// <summary>
+        /// Obtient ou définit l'identifiant de l'état.
+        /// </summary>
         public string Id { get; set; }
+        /// <summary>
+        /// Obtient ou définit le libellé de l'état.
+        /// </summary>
         public string Libelle { get; set; }
 
+        /// <summary>
+        /// Initialise une nouvelle instance de la classe <see cref="Etat"/>.
+        /// </summary>
+        /// <param name="id">Identifiant de l'état.</param>
+        /// <param name="libelle">Libellé.</param>
         public Etat(string id, string libelle)
         {
             this.Id = id;

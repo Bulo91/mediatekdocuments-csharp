@@ -7,7 +7,7 @@ namespace MediaTekDocuments
     static class Program
     {
         /// <summary>
-        /// Point d'entrée principal de l'application.
+        /// Point d'entrée principal : active les styles visuels, affiche la connexion puis le formulaire principal si succès.
         /// </summary>
         [STAThread]
         static void Main()

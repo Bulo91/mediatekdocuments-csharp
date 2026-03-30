@@ -1,14 +1,34 @@
-﻿
+
 namespace MediaTekDocuments.model
 {
     /// <summary>
-    /// Classe métier Revue hérite de Document : contient des propriétés spécifiques aux revues
+    /// Représente une revue périodique : document avec périodicité et délai de mise à disposition.
     /// </summary>
     public class Revue : Document
     {
+        /// <summary>
+        /// Obtient ou définit la périodicité de parution (ex. mensuelle).
+        /// </summary>
         public string Periodicite { get; set; }
+        /// <summary>
+        /// Obtient ou définit le délai de mise à disposition en jours.
+        /// </summary>
         public int DelaiMiseADispo { get; set; }
 
+        /// <summary>
+        /// Initialise une nouvelle instance de la classe <see cref="Revue"/>.
+        /// </summary>
+        /// <param name="id">Identifiant de la revue.</param>
+        /// <param name="titre">Titre de la revue.</param>
+        /// <param name="image">Chemin ou URL de l'image.</param>
+        /// <param name="idGenre">Identifiant du genre.</param>
+        /// <param name="genre">Libellé du genre.</param>
+        /// <param name="idPublic">Identifiant du public.</param>
+        /// <param name="lePublic">Libellé du public.</param>
+        /// <param name="idRayon">Identifiant du rayon.</param>
+        /// <param name="rayon">Libellé du rayon.</param>
+        /// <param name="periodicite">Périodicité de parution.</param>
+        /// <param name="delaiMiseADispo">Délai de mise à disposition (jours).</param>
         public Revue(string id, string titre, string image, string idGenre, string genre,
             string idPublic, string lePublic, string idRayon, string rayon,
             string periodicite, int delaiMiseADispo)

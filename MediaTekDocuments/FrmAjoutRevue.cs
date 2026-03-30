@@ -6,11 +6,26 @@ using MediaTekDocuments.model;
 
 namespace MediaTekDocuments.view
 {
+	/// <summary>
+	/// Formulaire modal de saisie ou de modification d'une revue (périodicité, délai de mise à disposition, classifications).
+	/// </summary>
 	public partial class FrmAjoutRevue : Form
 	{
+		/// <summary>
+		/// Obtient l'identifiant saisi pour la revue.
+		/// </summary>
 		public string IdRevue => txbId.Text.Trim();
+		/// <summary>
+		/// Obtient le titre saisi.
+		/// </summary>
 		public string TitreRevue => txbTitre.Text.Trim();
+		/// <summary>
+		/// Obtient la périodicité saisie.
+		/// </summary>
 		public string PeriodiciteRevue => txbPeriodicite.Text.Trim();
+		/// <summary>
+		/// Obtient le délai de mise à disposition en jours (0 si la saisie n'est pas un entier valide).
+		/// </summary>
 		public int DelaiMiseADispoRevue
 		{
 			get
@@ -20,21 +35,37 @@ namespace MediaTekDocuments.view
 			}
 		}
 
+		/// <summary>
+		/// Obtient le genre sélectionné dans la liste déroulante.
+		/// </summary>
 		public Categorie GenreSelectionne => cbxGenre.SelectedItem as Categorie;
+		/// <summary>
+		/// Obtient le public sélectionné dans la liste déroulante.
+		/// </summary>
 		public Categorie PublicSelectionne => cbxPublic.SelectedItem as Categorie;
+		/// <summary>
+		/// Obtient le rayon sélectionné dans la liste déroulante.
+		/// </summary>
 		public Categorie RayonSelectionne => cbxRayon.SelectedItem as Categorie;
 
 		/// <summary>
-		/// Constructeur pour ajout d'une revue
+		/// Initialise le formulaire en mode création d'une revue.
 		/// </summary>
+		/// <param name="genres">Liste des genres pour le combo.</param>
+		/// <param name="publics">Liste des publics pour le combo.</param>
+		/// <param name="rayons">Liste des rayons pour le combo.</param>
 		public FrmAjoutRevue(List<Categorie> genres, List<Categorie> publics, List<Categorie> rayons)
 			: this(genres, publics, rayons, null)
 		{
 		}
 
 		/// <summary>
-		/// Constructeur pour ajout ou modification. Si revueToEdit est fourni, mode modification (Id non modifiable).
+		/// Initialise le formulaire en mode création ou modification. Si <paramref name="revueToEdit"/> est renseigné, l'identifiant devient en lecture seule.
 		/// </summary>
+		/// <param name="genres">Liste des genres pour le combo.</param>
+		/// <param name="publics">Liste des publics pour le combo.</param>
+		/// <param name="rayons">Liste des rayons pour le combo.</param>
+		/// <param name="revueToEdit">Revue à modifier, ou <c>null</c> pour un ajout.</param>
 		public FrmAjoutRevue(List<Categorie> genres, List<Categorie> publics, List<Categorie> rayons, Revue revueToEdit)
 		{
 			InitializeComponent();
@@ -67,6 +98,11 @@ namespace MediaTekDocuments.view
 			}
 		}
 
+		/// <summary>
+		/// Valide la saisie et ferme le formulaire avec OK si les champs obligatoires sont renseignés.
+		/// </summary>
+		/// <param name="sender">Source de l'événement.</param>
+		/// <param name="e">Données de l'événement.</param>
 		private void btnValider_Click(object sender, EventArgs e)
 		{
 			if (txbId.Text.Trim() == "")
@@ -107,6 +143,11 @@ namespace MediaTekDocuments.view
 			this.Close();
 		}
 
+		/// <summary>
+		/// Ferme le formulaire avec le résultat Cancel sans enregistrer.
+		/// </summary>
+		/// <param name="sender">Source de l'événement.</param>
+		/// <param name="e">Données de l'événement.</param>
 		private void btnAnnuler_Click(object sender, EventArgs e)
 		{
 			this.DialogResult = DialogResult.Cancel;

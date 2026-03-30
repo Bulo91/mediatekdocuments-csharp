@@ -370,8 +370,10 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
-        /// Sérialise une AbonnementRevue en JSON pour l'API PHP (insertion)
+        /// Sérialise une <see cref="AbonnementRevue"/> en JSON pour l'API PHP (insertion).
         /// </summary>
+        /// <param name="abonnement">Abonnement à sérialiser.</param>
+        /// <returns>Chaîne JSON des champs attendus par l'API.</returns>
         private String AbonnementRevueToChampsJson(AbonnementRevue abonnement)
         {
             var obj = new
@@ -385,8 +387,10 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
-        /// Sérialise une CommandeDocument en JSON pour l'API PHP (insertion)
+        /// Sérialise une <see cref="CommandeDocument"/> en JSON pour l'API PHP (insertion).
         /// </summary>
+        /// <param name="commande">Commande à sérialiser.</param>
+        /// <returns>Chaîne JSON des champs attendus par l'API.</returns>
         private String CommandeDocumentToChampsJson(CommandeDocument commande)
         {
             var obj = new
@@ -441,8 +445,10 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
-        /// Sérialise une Revue en JSON avec les noms de champs attendus par l'API PHP
+        /// Sérialise une <see cref="Revue"/> en JSON avec les noms de champs attendus par l'API PHP.
         /// </summary>
+        /// <param name="revue">Revue à sérialiser.</param>
+        /// <returns>Chaîne JSON des champs.</returns>
         private String RevueToChampsJson(Revue revue)
         {
             var obj = new
@@ -500,8 +506,10 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
-        /// Sérialise un Dvd en JSON avec les noms de champs attendus par l'API PHP
+        /// Sérialise un <see cref="Dvd"/> en JSON avec les noms de champs attendus par l'API PHP.
         /// </summary>
+        /// <param name="dvd">DVD à sérialiser.</param>
+        /// <returns>Chaîne JSON des champs.</returns>
         private String DvdToChampsJson(Dvd dvd)
         {
             var obj = new
@@ -560,12 +568,21 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
-        /// Résultat d'une tentative de suppression (pour messages utilisateur différenciés)
+        /// Résultat d'une tentative de suppression (pour adapter les messages utilisateur).
         /// </summary>
         public enum ResultatSuppression
         {
+            /// <summary>
+            /// Erreur technique ou réponse API inattendue.
+            /// </summary>
             Erreur = -1,
+            /// <summary>
+            /// Refus métier : aucune ligne supprimée (<c>result</c> nul).
+            /// </summary>
             RefuseCommande = 0,
+            /// <summary>
+            /// Au moins une ligne a été supprimée.
+            /// </summary>
             Succes = 1
         }
 
@@ -652,9 +669,11 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
-        /// Traitement du DELETE - retourne le statut pour différencier succès, refus métier et erreur
-        /// code=200 et result>0 => Succes ; code=200 et result=0 => RefuseCommande ; sinon => Erreur
+        /// Traite une requête DELETE et interprète la réponse : succès, refus métier (<c>result</c> nul) ou erreur.
         /// </summary>
+        /// <param name="methode">Verbe HTTP (attendu : DELETE).</param>
+        /// <param name="message">Chemin relatif et paramètres d'URL.</param>
+        /// <returns>Statut de la suppression.</returns>
         private ResultatSuppression TraitementSupprimer(String methode, String message)
         {
             try
@@ -683,8 +702,10 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
-        /// Sérialise un Livre en JSON avec les noms de champs attendus par l'API PHP
+        /// Sérialise un <see cref="Livre"/> en JSON avec les noms de champs attendus par l'API PHP.
         /// </summary>
+        /// <param name="livre">Livre à sérialiser.</param>
+        /// <returns>Chaîne JSON des champs.</returns>
         private String LivreToChampsJson(Livre livre)
         {
             var obj = new
@@ -703,8 +724,12 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
-        /// Traitement de l'écriture (POST/PUT) - succès si code==200 et result>0 (guide CNED règle 9)
+        /// Traite une écriture POST ou PUT : succès si le code HTTP retourné par l'API est 200 et <c>result</c> &gt; 0.
         /// </summary>
+        /// <param name="methode">Verbe HTTP (POST ou PUT).</param>
+        /// <param name="message">Chemin relatif de la ressource.</param>
+        /// <param name="parametres">Corps de la requête (souvent préfixé par <c>champs=</c>).</param>
+        /// <returns><c>true</c> si l'opération a réussi selon les critères de l'API.</returns>
         private bool TraitementEcrire(String methode, String message, String parametres)
         {
             try
@@ -753,13 +778,13 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
-        /// Traitement de la récupération du retour de l'api, avec conversion du json en liste pour les select (GET)
+        /// Appelle l'API et désérialise le résultat en liste d'objets pour les requêtes GET réussies (code 200).
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="methode">verbe HTTP (GET, POST, PUT, DELETE)</param>
-        /// <param name="message">information envoyée dans l'url</param>
-        /// <param name="parametres">paramètres à envoyer dans le body, au format "chp1=val1&chp2=val2&..."</param>
-        /// <returns>liste d'objets récupérés (ou liste vide)</returns>
+        /// <typeparam name="T">Type des éléments attendus dans <c>result</c>.</typeparam>
+        /// <param name="methode">Verbe HTTP (GET, POST, PUT ou DELETE).</param>
+        /// <param name="message">Segment d'URL et filtres.</param>
+        /// <param name="parametres">Corps de la requête pour POST/PUT, ou <c>null</c>.</param>
+        /// <returns>Liste d'objets ; liste vide en cas d'échec ou d'absence de données.</returns>
         private List<T> TraitementRecup<T> (String methode, String message, String parametres)
         {
             List<T> liste = new List<T>();
@@ -791,11 +816,11 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
-        /// Convertit en json un couple nom/valeur
+        /// Construit un objet JSON à une propriété (nom/valeur) pour les filtres d'URL.
         /// </summary>
-        /// <param name="nom"></param>
-        /// <param name="valeur"></param>
-        /// <returns>couple au format json</returns>
+        /// <param name="nom">Nom de la propriété JSON.</param>
+        /// <param name="valeur">Valeur associée.</param>
+        /// <returns>Chaîne JSON représentant l'objet.</returns>
         private static String convertToJson(Object nom, Object valeur)
         {
             Dictionary<Object, Object> dictionary = new Dictionary<Object, Object>();
@@ -804,10 +829,13 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
-        /// Modification du convertisseur Json pour gérer le format de date
+        /// Convertisseur JSON pour sérialiser les dates au format <c>yyyy-MM-dd</c> attendu par l'API.
         /// </summary>
         private sealed class CustomDateTimeConverter : IsoDateTimeConverter
         {
+            /// <summary>
+            /// Initialise le convertisseur avec le format de date court ISO.
+            /// </summary>
             public CustomDateTimeConverter()
             {
                 base.DateTimeFormat = "yyyy-MM-dd";
@@ -815,17 +843,31 @@ namespace MediaTekDocuments.dal
         }
 
         /// <summary>
-        /// Modification du convertisseur Json pour prendre en compte les booléens
-        /// classe trouvée sur le site :
-        /// https://www.thecodebuzz.com/newtonsoft-jsonreaderexception-could-not-convert-string-to-boolean/
+        /// Convertisseur JSON pour accepter les booléens renvoyés sous forme de chaîne ou de nombre par l'API.
+        /// Voir : https://www.thecodebuzz.com/newtonsoft-jsonreaderexception-could-not-convert-string-to-boolean/
         /// </summary>
         private sealed class CustomBooleanJsonConverter : JsonConverter<bool>
         {
+            /// <summary>
+            /// Lit une valeur JSON et la convertit en booléen.
+            /// </summary>
+            /// <param name="reader">Lecteur JSON.</param>
+            /// <param name="objectType">Type cible.</param>
+            /// <param name="existingValue">Valeur existante.</param>
+            /// <param name="hasExistingValue">Indique si une valeur existe déjà.</param>
+            /// <param name="serializer">Sérialiseur appelant.</param>
+            /// <returns>Valeur booléenne interprétée.</returns>
             public override bool ReadJson(JsonReader reader, Type objectType, bool existingValue, bool hasExistingValue, JsonSerializer serializer)
             {
                 return Convert.ToBoolean(reader.ValueType == typeof(string) ? Convert.ToByte(reader.Value) : reader.Value);
             }
 
+            /// <summary>
+            /// Écrit une valeur booléenne en JSON.
+            /// </summary>
+            /// <param name="writer">Écrivain JSON.</param>
+            /// <param name="value">Valeur à écrire.</param>
+            /// <param name="serializer">Sérialiseur appelant.</param>
             public override void WriteJson(JsonWriter writer, bool value, JsonSerializer serializer)
             {
                 serializer.Serialize(writer, value);

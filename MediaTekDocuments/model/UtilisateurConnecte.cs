@@ -1,12 +1,12 @@
 namespace MediaTekDocuments.model
 {
     /// <summary>
-    /// Stocke l'utilisateur authentifié pendant l'exécution de l'application.
+    /// Point d'accès statique à l'utilisateur authentifié pendant l'exécution de l'application.
     /// </summary>
     public static class UtilisateurConnecte
     {
         /// <summary>
-        /// Utilisateur actuellement connecté, ou null si non authentifié.
+        /// Obtient ou définit l'utilisateur actuellement connecté, ou <c>null</c> si aucune session n'est ouverte.
         /// </summary>
         public static Utilisateur Instance { get; set; }
     }
