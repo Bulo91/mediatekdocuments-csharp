@@ -1,0 +1,39 @@
+using System;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+class CustomBooleanJsonConverter : JsonConverter<bool> {
+  public override bool ReadJson(JsonReader reader, Type objectType, bool existingValue, bool hasExistingValue, JsonSerializer serializer) {
+    return Convert.ToBoolean(reader.ValueType == typeof(string) ? Convert.ToByte(reader.Value) : reader.Value);
+  }
+  public override void WriteJson(JsonWriter writer, bool value, JsonSerializer serializer) {
+    serializer.Serialize(writer, value);
+  }
+}
+class Utilisateur {
+  [JsonProperty("id")] public string Id { get; set; }
+  [JsonProperty("login")] public string Login { get; set; }
+  [JsonProperty("idService")] public string IdService { get; set; }
+  [JsonProperty("libelleService")] public string LibelleService { get; set; }
+  [JsonProperty("accesDocuments")] public bool AccesDocuments { get; set; }
+  [JsonProperty("accesCommandes")] public bool AccesCommandes { get; set; }
+  [JsonProperty("accesExemplaires")] public bool AccesExemplaires { get; set; }
+  [JsonProperty("actif")] public bool Actif { get; set; }
+}
+class T {
+  static void Main() {
+    var retour = JObject.Parse("{\"code\":200,\"message\":\"OK\",\"result\":[{\"id\":\"U0001\",\"login\":\"tout\",\"idService\":\"SVC01\",\"libelleService\":\"Direction\",\"accesDocuments\":1,\"accesCommandes\":1,\"accesExemplaires\":1,\"actif\":1}]}");
+    try {
+      String resultString = JsonConvert.SerializeObject(retour["result"]);
+      Console.WriteLine("resultString: " + resultString);
+      var liste = JsonConvert.DeserializeObject<List<Utilisateur>>(resultString, new CustomBooleanJsonConverter());
+      Console.WriteLine("count: " + liste.Count);
+      Console.WriteLine("login: " + liste[0].Login);
+      Console.WriteLine("accesDocs: " + liste[0].AccesDocuments);
+    } catch (Exception e) {
+      Console.WriteLine("ERROR: " + e.GetType().FullName);
+      Console.WriteLine(e.Message);
+      Console.WriteLine(e.StackTrace);
+    }
+  }
+}

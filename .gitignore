@@ -359,5 +359,11 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 
+# MediaTekDocuments installer outputs (keep vdproj in repo)
+MediaTekDocumentsSetup/Release/
+MediaTekDocumentsSetup/Debug/
+livrables/*.msi
+livrables/*.exe
+
 # Fody - auto-generated XML schema
 FodyWeavers.xsd

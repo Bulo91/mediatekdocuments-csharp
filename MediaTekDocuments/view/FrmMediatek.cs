@@ -170,14 +170,14 @@ namespace MediaTekDocuments.view
         {
             bdgLivresListe.DataSource = livres;
             dgvLivresListe.DataSource = bdgLivresListe;
-            dgvLivresListe.Columns["isbn"].Visible = false;
-            dgvLivresListe.Columns["idRayon"].Visible = false;
-            dgvLivresListe.Columns["idGenre"].Visible = false;
-            dgvLivresListe.Columns["idPublic"].Visible = false;
-            dgvLivresListe.Columns["image"].Visible = false;
+            dgvLivresListe.Columns["Isbn"].Visible = false;
+            dgvLivresListe.Columns["IdRayon"].Visible = false;
+            dgvLivresListe.Columns["IdGenre"].Visible = false;
+            dgvLivresListe.Columns["IdPublic"].Visible = false;
+            dgvLivresListe.Columns["Image"].Visible = false;
             dgvLivresListe.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-            dgvLivresListe.Columns["id"].DisplayIndex = 0;
-            dgvLivresListe.Columns["titre"].DisplayIndex = 1;
+            dgvLivresListe.Columns["Id"].DisplayIndex = 0;
+            dgvLivresListe.Columns["Titre"].DisplayIndex = 1;
         }
 
         /// <summary>
@@ -678,14 +678,14 @@ namespace MediaTekDocuments.view
         {
             bdgDvdListe.DataSource = Dvds;
             dgvDvdListe.DataSource = bdgDvdListe;
-            dgvDvdListe.Columns["idRayon"].Visible = false;
-            dgvDvdListe.Columns["idGenre"].Visible = false;
-            dgvDvdListe.Columns["idPublic"].Visible = false;
-            dgvDvdListe.Columns["image"].Visible = false;
-            dgvDvdListe.Columns["synopsis"].Visible = false;
+            dgvDvdListe.Columns["IdRayon"].Visible = false;
+            dgvDvdListe.Columns["IdGenre"].Visible = false;
+            dgvDvdListe.Columns["IdPublic"].Visible = false;
+            dgvDvdListe.Columns["Image"].Visible = false;
+            dgvDvdListe.Columns["Synopsis"].Visible = false;
             dgvDvdListe.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-            dgvDvdListe.Columns["id"].DisplayIndex = 0;
-            dgvDvdListe.Columns["titre"].DisplayIndex = 1;
+            dgvDvdListe.Columns["Id"].DisplayIndex = 0;
+            dgvDvdListe.Columns["Titre"].DisplayIndex = 1;
         }
 
         /// <summary>
@@ -1345,13 +1345,13 @@ namespace MediaTekDocuments.view
         {
             bdgRevuesListe.DataSource = revues;
             dgvRevuesListe.DataSource = bdgRevuesListe;
-            dgvRevuesListe.Columns["idRayon"].Visible = false;
-            dgvRevuesListe.Columns["idGenre"].Visible = false;
-            dgvRevuesListe.Columns["idPublic"].Visible = false;
-            dgvRevuesListe.Columns["image"].Visible = false;
+            dgvRevuesListe.Columns["IdRayon"].Visible = false;
+            dgvRevuesListe.Columns["IdGenre"].Visible = false;
+            dgvRevuesListe.Columns["IdPublic"].Visible = false;
+            dgvRevuesListe.Columns["Image"].Visible = false;
             dgvRevuesListe.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-            dgvRevuesListe.Columns["id"].DisplayIndex = 0;
-            dgvRevuesListe.Columns["titre"].DisplayIndex = 1;
+            dgvRevuesListe.Columns["Id"].DisplayIndex = 0;
+            dgvRevuesListe.Columns["Titre"].DisplayIndex = 1;
         }
 
         /// <summary>

@@ -17,10 +17,6 @@ namespace MediaTekDocuments.dal
     public class Access
     {
         /// <summary>
-        /// adresse de l'API
-        /// </summary>
-        private static readonly string uriApi = ConfigurationManager.AppSettings["uriApi"];
-        /// <summary>
         /// instance unique de la classe
         /// </summary>
         private static Access instance = null;
@@ -61,11 +57,26 @@ namespace MediaTekDocuments.dal
                 .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
-            String authenticationString;
             try
             {
-                authenticationString = ConfigurationManager.AppSettings["apiAuthenticationString"];
-                api = ApiRest.GetInstance(uriApi, authenticationString);
+                string uriApi = ConfigurationManager.AppSettings["uriApi"];
+                string username = ConfigurationManager.AppSettings["ApiUsername"];
+                string password = ConfigurationManager.AppSettings["ApiPassword"];
+
+                if (string.IsNullOrEmpty(uriApi))
+                {
+                    throw new ConfigurationErrorsException("La clé uriApi est absente ou vide dans App.config.");
+                }
+                if (string.IsNullOrEmpty(username))
+                {
+                    throw new ConfigurationErrorsException("La clé ApiUsername est absente ou vide dans App.config.");
+                }
+                if (string.IsNullOrEmpty(password))
+                {
+                    throw new ConfigurationErrorsException("La clé ApiPassword est absente ou vide dans App.config.");
+                }
+
+                api = ApiRest.GetInstance(uriApi, username, password);
             }
             catch (Exception e)
             {
@@ -102,7 +113,7 @@ namespace MediaTekDocuments.dal
 				string jsonChamps = JsonConvert.SerializeObject(obj);
 				List<Utilisateur> utilisateurs = TraitementRecup<Utilisateur>(
 					GET,
-					"authentification/" + jsonChamps,
+					"authentification/" + Uri.EscapeDataString(jsonChamps),
 					null
 				);
 				return (utilisateurs != null && utilisateurs.Count > 0) ? utilisateurs[0] : null;
@@ -110,7 +121,7 @@ namespace MediaTekDocuments.dal
 			catch (Exception ex)
 			{
 				Log.Error(ex, "Erreur authentification : {Message}", ex.Message);
-				return null;
+				throw;
 			}
 		}
 
@@ -791,26 +802,30 @@ namespace MediaTekDocuments.dal
             try
             {
                 JObject retour = api.RecupDistant(methode, message, parametres);
-                // extraction du code retourné
-                String code = (String)retour["code"];
-                if (code.Equals("200"))
+                var codeToken = retour["code"];
+                if (codeToken == null)
                 {
-                    // dans le cas du GET (select), récupération de la liste d'objets
-                    if (methode.Equals(GET))
-                    {
-                        String resultString = JsonConvert.SerializeObject(retour["result"]);
-                        // construction de la liste d'objets à partir du retour de l'api
-                        liste = JsonConvert.DeserializeObject<List<T>>(resultString, new CustomBooleanJsonConverter());
-                    }
+                    Log.Error("TraitementRecup - code absent dans la réponse API");
+                    return liste;
                 }
-                else
+                int codeValue;
+                if (!int.TryParse(codeToken.ToString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out codeValue) || codeValue != 200)
                 {
-                    Log.Error("TraitementRecup - code erreur = {Code} message = {Message}", code, (String)retour["message"]);
+                    Log.Error("TraitementRecup - code erreur = {Code} message = {Message}", codeToken.ToString(), retour["message"]?.ToString());
+                    return liste;
                 }
-            }catch(Exception e)
+                // dans le cas du GET (select), récupération de la liste d'objets
+                if (methode.Equals(GET))
+                {
+                    String resultString = JsonConvert.SerializeObject(retour["result"]);
+                    // construction de la liste d'objets à partir du retour de l'api
+                    liste = JsonConvert.DeserializeObject<List<T>>(resultString, new CustomBooleanJsonConverter());
+                }
+            }
+            catch (Exception e)
             {
                 Log.Error(e, "Erreur lors de l'accès à l'API (TraitementRecup) : {Message}", e.Message);
-                Environment.Exit(0);
+                throw;
             }
             return liste;
         }

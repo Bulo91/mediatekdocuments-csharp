@@ -41,18 +41,30 @@ namespace MediaTekDocuments.view
                 return;
             }
 
-            var utilisateur = controller.AuthentifierUtilisateur(login, motDePasse);
-            if (utilisateur != null)
+            try
             {
-                UtilisateurConnecte.Instance = utilisateur;
-                DialogResult = DialogResult.OK;
-                Close();
+                var utilisateur = controller.AuthentifierUtilisateur(login, motDePasse);
+                if (utilisateur != null)
+                {
+                    UtilisateurConnecte.Instance = utilisateur;
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                else
+                {
+                    MessageBox.Show("Identifiants incorrects.", "Connexion", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    txbMotDePasse.Clear();
+                    txbMotDePasse.Focus();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("Identifiants incorrects.", "Connexion", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                txbMotDePasse.Clear();
-                txbMotDePasse.Focus();
+                string message = ex.GetType().Name + Environment.NewLine + ex.Message;
+                if (ex.InnerException != null)
+                {
+                    message += Environment.NewLine + "Cause : " + ex.InnerException.GetType().Name + " - " + ex.InnerException.Message;
+                }
+                MessageBox.Show(message, "Erreur de connexion", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
